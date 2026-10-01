@@ -263,7 +263,7 @@ function renderList() {
     `<th data-sort="date" aria-sort="${as('date')}">Date</th><th>Statut</th></tr></thead><tbody>` +
     pageRows.map(d => {
       const m = d.metrics, best = d.metrics.generation_tok_s == (top[0] ? top[0].metrics.generation_tok_s : null);
-      return `<tr><td><a href="/detail.html#/run/${esc(d.id)}">${esc(d.model.name)}${d.model.parameters ? `<span class="sub">${esc(d.model.parameters)}</span>` : ''}${d.example ? `<span class="sub"> ex</span>` : ''}</a></td>` +
+      return `<tr><td><a href="./detail.html#/run/${esc(d.id)}">${esc(d.model.name)}${d.model.parameters ? `<span class="sub">${esc(d.model.parameters)}</span>` : ''}${d.example ? `<span class="sub"> ex</span>` : ''}</a></td>` +
         `<td>${esc(d.runtime.name)}</td><td>${esc(d.quantization)}</td><td>${esc(d.hardware.gpu)}</td>` +
         `<td class="num${best ? ' best' : ''}">${fmt(m.generation_tok_s, 1)}</td><td class="num">${fmt(m.ttft_s, 2)}</td>` +
         `<td class="num">${fmt(m.vram_peak_gb, 1)}</td><td class="num">${new Date(d.timestamp).toLocaleDateString('fr-FR')}</td>` +
@@ -271,7 +271,7 @@ function renderList() {
     }).join('') + '</tbody></table></div>' +
     `<div class="run-cards">` + pageRows.map(d => {
       const m = d.metrics;
-      return `<div class="run-card"><a href="/detail.html#/run/${esc(d.id)}" style="display:block">` +
+      return `<div class="run-card"><a href="./detail.html#/run/${esc(d.id)}" style="display:block">` +
         `<div class="run-title">${esc(d.model.name)} <span class="mono" style="color:var(--c-text-faint);font-weight:400">· ${esc(d.runtime.name)}</span></div>` +
         statusBadge(d.status) +
         `<dl style="margin-top:var(--sp-2)"><div class="kv"><dt>Gen</dt><dd>${fmt(m.generation_tok_s, 1)} t/s</dd></div>` +
@@ -542,7 +542,7 @@ async function modelsInit() {
     <tbody>${rows.map(g => {
       const best = g.gens.length ? Math.max(...g.gens) : null;
       return `<tr>
-        <td><a href="/?model=${encodeURIComponent(g.name)}">${esc(g.name)}</a>${g.ex ? `<span class="sub"> ex</span>` : ''}</td>
+        <td><a href="./?model=${encodeURIComponent(g.name)}">${esc(g.name)}</a>${g.ex ? `<span class="sub"> ex</span>` : ''}</td>
         <td class="num">${g.runs}${g.err ? ` <span class="sub">${g.err} en erreur</span>` : ''}</td>
         <td class="num">${fmt(best, 1)}</td>
         <td class="num">${fmt(avg(g.ttfts), 2)}</td>
