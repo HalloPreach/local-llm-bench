@@ -30,6 +30,13 @@ Retirer la tâche : `Unregister-ScheduledTask -TaskName LocalLLMBenchMetricsSync
 Les échecs sont consignés localement dans `.metrics-sync.log` (exclu de Git).
 Le pont `ninfer_bridge.py` reste disponible pour une lecture locale indépendante.
 
+L'historique des seules métriques est conservé dans `logs/metrics.sqlite3`, exclu
+de Git, pour résister aux rotations du journal. Sur cette installation, les
+lanceurs Windows nInfer redirigent stderr vers `logs/ninfer.stderr.log` au prochain
+démarrage du modèle. Le script fusionne aussi les mesures du pont local tant qu'il
+est actif, ce qui couvre la session nInfer déjà ouverte. Seul l'instantané JSON
+filtré est publié, jamais le journal opérationnel ou la base locale.
+
 Le TTS de la partie benchmarks désigne *time-to-solution*; le temps total de
 réponse des requêtes nInfer est affiché séparément pour éviter toute ambiguïté.
 

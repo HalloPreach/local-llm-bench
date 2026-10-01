@@ -3,10 +3,20 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from sync_metrics import FIELDS, make_snapshot
+from sync_metrics import FIELDS, make_snapshot, update_history
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_history_survives_log_rotation_without_duplicates(self):
+        first = {"time": 1000, "status": "ok", "outputTokens": 10}
+        second = {"time": 2000, "status": "ok", "outputTokens": 20}
+        with tempfile.TemporaryDirectory() as directory:
+            db = Path(directory) / "metrics.sqlite3"
+            self.assertEqual(len(update_history([first], db)), 1)
+            self.assertEqual(len(update_history([first, first], db)), 1)
+            history = update_history([second], db)
+        self.assertEqual([row["time"] for row in history], [2000, 1000])
+
     def test_private_text_cannot_enter_export(self):
         secret = "PRIVATE_SENTINEL_PROMPT_RESPONSE_TOKEN"
         event = {"event": "request_done", "timestamp_unix_ms": 1000,
