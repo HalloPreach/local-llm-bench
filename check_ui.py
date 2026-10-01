@@ -32,7 +32,7 @@ class P(HTMLParser):
             self.errors.append(f"mismatch: <{top}> closed by </{tag}>")
 
 
-pages = [ROOT / 'ui' / f for f in ('index.html', 'detail.html', 'compare.html', 'models.html')]
+pages = [ROOT / 'ui' / f for f in ('index.html', 'detail.html', 'compare.html', 'models.html', 'dashboard.html')]
 css = (ROOT / 'ui' / 'style.css').read_text(encoding='utf-8')
 js = (ROOT / 'ui' / 'app.js').read_text(encoding='utf-8')
 
@@ -50,10 +50,11 @@ for pg in pages:
 # Éléments requis par page
 required = {
     'index.html': ['id="q"', 'id="f-model"', 'id="f-runtime"', 'id="f-quant"',
-                   'id="f-gpu"', 'id="genChart"', 'id="runs"', 'id="pager"', 'id="summary"'],
+                   'id="f-gpu"', 'id="f-status"', 'id="genChart"', 'id="runs"', 'id="pager"', 'id="summary"'],
     'detail.html': ['id="detail"', 'id="crumb"'],
     'compare.html': ['id="runList"', 'id="goBtn"', 'id="cmpTable"', 'id="scatter"', 'id="ttftChart"'],
     'models.html': ['id="models"'],
+    'dashboard.html': ['id="kpis"', 'id="errorBox"'],
 }
 for name, reqs in required.items():
     src = (ROOT / 'ui' / name).read_text(encoding='utf-8')
@@ -61,9 +62,9 @@ for name, reqs in required.items():
         if r not in src:
             problems.append(f"{name}: manquant {r}")
 
-# la nav "Modèles" est présente sur les 4 pages (liens relatifs : le site est
+# la nav "Modèles" est présente sur les 5 pages (liens relatifs : le site est
 # servi aussi en sous-répertoire sur GitHub Pages)
-for name in ('index.html', 'detail.html', 'compare.html', 'models.html'):
+for name in ('index.html', 'detail.html', 'compare.html', 'models.html', 'dashboard.html'):
     src = (ROOT / 'ui' / name).read_text(encoding='utf-8')
     if 'href="models.html"' not in src:
         problems.append(f"{name}: lien nav models.html manquant")
@@ -92,7 +93,7 @@ if '.alert[hidden]{display:none}' not in css:
     problems.append("style.css : .alert[hidden]{display:none} absent (bannière d'erreur toujours visible)")
 
 # app.js affiche bien les champs de reproductibilité / TTS / exemple
-for token in ('d.command', 'd.agent_task', 'd.example', 'modelsInit', 'Tâche agent'):
+for token in ('d.command', 'd.agent_task', 'd.example', 'modelsInit', 'dashboardInit', 'Tâche agent'):
     if token not in js:
         problems.append(f"app.js : champ absent {token!r}")
 
@@ -102,5 +103,5 @@ if problems:
         print("  -", pr)
     raise SystemExit(1)
 
-print(f"OK — 4 pages bien formées, {len(classes)} classes vérifiées dans style.css "
+print(f"OK — 5 pages bien formées, {len(classes)} classes vérifiées dans style.css "
       f"({len(css)} bytes), endpoints API branchés, thème clair+sombre présent.")

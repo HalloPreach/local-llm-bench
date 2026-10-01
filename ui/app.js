@@ -19,6 +19,7 @@ const fmt = (v, d = 1) => v == null ? '—' : Number(v).toLocaleString('fr-FR', 
 const fmtDur = s => s == null ? '—' : (s < 60 ? fmt(s, 1) + ' s' : Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0') + ' min');
 const STATUS_CLS = { success: 'badge--success', partial: 'badge--partial', error: 'badge--error' };
 const statusBadge = s => `<span class="badge ${STATUS_CLS[s] || 'badge--neutral'}"><span class="dot"></span>${esc(s)}</span>`;
+const fmtTs = ts => new Date(ts).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const CH_COLORS = ['var(--ch-1)', 'var(--ch-2)', 'var(--ch-3)', 'var(--ch-4)', 'var(--ch-5)'];
 const short = (name, n = 16) => name.length > n ? name.slice(0, n - 1) + '…' : name;
 
@@ -148,6 +149,8 @@ const SORTS = {
   gen: d => d.metrics.generation_tok_s,
   ttft: d => d.metrics.ttft_s,
   vram: d => d.metrics.vram_peak_gb,
+  dur: d => d.metrics.duration_s,
+  date: d => d.timestamp,
 };
 
 async function listInit() {
@@ -165,13 +168,13 @@ async function listInit() {
     if (list.F.model) $('#f-model').value = list.F.model;
   }
   $('#q').addEventListener('input', e => { list.q = e.target.value.trim().toLowerCase(); list.page = 1; renderList(); });
-  for (const [id, k] of [['#f-model', 'model'], ['#f-runtime', 'runtime'], ['#f-quant', 'quantization'], ['#f-gpu', 'gpu']])
+  for (const [id, k] of [['#f-model', 'model'], ['#f-runtime', 'runtime'], ['#f-quant', 'quantization'], ['#f-gpu', 'gpu'], ['#f-status', 'status']])
     $(id).addEventListener('change', e => { list.F[k] = e.target.value; list.page = 1; renderList(); });
   $('#resetBtn').addEventListener('click', () => {
     list.q = ''; list.page = 1;
     for (const k in list.F) list.F[k] = '';
     $('#q').value = '';
-    for (const id of ['#f-model', '#f-runtime', '#f-quant', '#f-gpu']) $(id).value = '';
+    for (const id of ['#f-model', '#f-runtime', '#f-quant', '#f-gpu', '#f-status']) $(id).value = '';
     renderList();
   });
   $('#prevBtn').addEventListener('click', () => { list.page--; renderList(); });
@@ -234,11 +237,11 @@ function clientFiltered() {
     .join(' ').toLowerCase().includes(list.q));
   const dir = list.sort.dir, key = list.sort.key;
   rows = [...rows].sort((a, b) => {
-    if (key === 'date') return a.timestamp.localeCompare(b.timestamp) * dir;
     const va = SORTS[key](a), vb = SORTS[key](b);
-    if (va == null && vb == null) return a.timestamp.localeCompare(b.timestamp);
-    if (va == null) return 1;   // metric manquant : toujours en fin de liste
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;   // métrique manquante : toujours en fin de liste
     if (vb == null) return -1;
+    if (typeof va === 'string') return va.localeCompare(vb) * dir;
     return (vb - va) * dir;
   });
   return rows;
@@ -259,14 +262,14 @@ function renderList() {
   $('#runs').innerHTML = total ? (rows.some((_, i) => i < start + PAGE) ? (
     `<div class="table-wrap"><table class="cls-table"><caption class="sr-only">Runs filtrés et triables</caption><thead><tr>` +
     `<th>Modèle</th><th>Runtime</th><th>Quant</th><th>GPU</th>` +
-    `<th data-sort="gen" aria-sort="${as('gen')}">Gen t/s</th><th data-sort="ttft" aria-sort="${as('ttft')}">TTFT</th><th data-sort="vram" aria-sort="${as('vram')}">VRAM</th>` +
+    `<th data-sort="gen" aria-sort="${as('gen')}">Gen t/s</th><th data-sort="ttft" aria-sort="${as('ttft')}">TTFT</th><th data-sort="vram" aria-sort="${as('vram')}">VRAM</th><th data-sort="dur" aria-sort="${as('dur')}">Durée</th>` +
     `<th data-sort="date" aria-sort="${as('date')}">Date</th><th>Statut</th></tr></thead><tbody>` +
     pageRows.map(d => {
       const m = d.metrics, best = d.metrics.generation_tok_s == (top[0] ? top[0].metrics.generation_tok_s : null);
       return `<tr><td><a href="./detail.html#/run/${esc(d.id)}">${esc(d.model.name)}${d.model.parameters ? `<span class="sub">${esc(d.model.parameters)}</span>` : ''}${d.example ? `<span class="sub"> ex</span>` : ''}</a></td>` +
         `<td>${esc(d.runtime.name)}</td><td>${esc(d.quantization)}</td><td>${esc(d.hardware.gpu)}</td>` +
         `<td class="num${best ? ' best' : ''}">${fmt(m.generation_tok_s, 1)}</td><td class="num">${fmt(m.ttft_s, 2)}</td>` +
-        `<td class="num">${fmt(m.vram_peak_gb, 1)}</td><td class="num">${new Date(d.timestamp).toLocaleDateString('fr-FR')}</td>` +
+        `<td class="num">${fmt(m.vram_peak_gb, 1)}</td><td class="num">${fmtDur(m.duration_s)}</td><td>${fmtTs(d.timestamp)}</td>` +
         `<td>${statusBadge(d.status)}</td></tr>`;
     }).join('') + '</tbody></table></div>' +
     `<div class="run-cards">` + pageRows.map(d => {
@@ -276,7 +279,9 @@ function renderList() {
         statusBadge(d.status) +
         `<dl style="margin-top:var(--sp-2)"><div class="kv"><dt>Gen</dt><dd>${fmt(m.generation_tok_s, 1)} t/s</dd></div>` +
         `<div class="kv"><dt>TTFT</dt><dd>${fmt(m.ttft_s, 2)} s</dd></div>` +
-        `<div class="kv"><dt>VRAM</dt><dd>${fmt(m.vram_peak_gb, 1)} GB</dd></div></dl></a></div>`;
+        `<div class="kv"><dt>VRAM</dt><dd>${fmt(m.vram_peak_gb, 1)} GB</dd></div>` +
+        `<div class="kv"><dt>Durée</dt><dd>${fmtDur(m.duration_s)}</dd></div>` +
+        `<div class="kv"><dt>Date</dt><dd>${fmtTs(d.timestamp)}</dd></div></dl></a></div>`;
     }).join('') + '</div>') : '') :
     `<div class="empty-state"><div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.3-4.3M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>` +
     `<h3>Aucun run</h3><p>${total === 0 && list.items.length === 0 ? 'La base est vide pour l\'instant — insérez des runs via l\'API (POST /benchmarks).' : 'Aucun résultat avec ces filtres.'}</p>` +
@@ -358,6 +363,8 @@ async function detailInit() {
       ${d.example ? '<span class="badge badge--partial">exemple</span>' : ''}
       <span class="mono" style="color:var(--c-text-faint);font-size:var(--text-xs)">${esc(d.timestamp)}</span>
       <span class="spacer"></span>
+      <button class="btn btn--ghost btn--sm" id="cmpBtn" type="button">Comparer ce run</button>
+      <button class="btn btn--ghost btn--sm" id="mdlBtn" type="button">Voir le modèle</button>
       <button class="btn btn--ghost btn--sm" id="delBtn" type="button">Supprimer ce run</button>
     </div>
     <section class="stat-grid" style="margin-top:var(--sp-4); grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
@@ -397,6 +404,9 @@ async function detailInit() {
       try { await getJSON(`${API}/${encodeURIComponent(runId)}`, null, 'DELETE'); location.href = './'; }
       catch (e) { err.hidden = false; $('#errorText').textContent = 'Suppression impossible — ' + e.message; }
     });
+    // navigations vers les autres vues (liens relatifs : GitHub Pages sert /<repo>/ui/)
+    $('#cmpBtn').addEventListener('click', () => { location.href = 'compare.html'; });
+    $('#mdlBtn').addEventListener('click', () => { location.href = `./?model=${encodeURIComponent(d.model.name)}`; });
 }
 
 /* ================= VUE COMPARAISON (compare.html) ================= */
@@ -551,9 +561,67 @@ async function modelsInit() {
     }).join('')}</tbody></table></div>`;
 }
 
+/* ================= VUE DASHBOARD (dashboard.html) ================= */
+/* KPIs d'entrée : agrégats côté client sur GET /benchmarks?page_size=200, même
+   pattern que la page Modèles (un seul fetch, pas de nouvel endpoint). */
+async function dashboardInit() {
+  initTheme();
+  let items = [], total = null;
+  try {
+    // ponytail: distincts (modèles/meilleur gen) calculés sur les items retournés —
+    // exact ≤ 200 runs (page_size plafonné à 200 côté API). Au-delà : ajouter
+    // GET /benchmarks/summary (count distinct + max/min) pour rester exact.
+    const data = await getJSON(API, { page_size: 200 });
+    items = data.items; total = data.total;
+  } catch (e) {
+    // démo statique : API absente → jeu de démo local (seed.json)
+    if (e instanceof TypeError || /fetch|404|load/i.test(e.message)) {
+      items = (await demoRuns()).slice(0, 200); total = items.length;
+    } else { const b = $('#errorBox'); b.hidden = false; $('#errorText').textContent = 'API injoignable — ' + e.message; return; }
+  }
+  const box = $('#kpis');
+  if (!items.length) {
+    box.innerHTML = '<div class="empty-state" style="padding:var(--sp-4)"><h3>Base vide</h3><p>Aucun run — insérez des runs via l\'API (POST /benchmarks) puis revenez ici.</p></div>';
+    return;
+  }
+  // « Runs » : total exact (champ total de l'API) ; en démo, items.length.
+  const runsCount = total != null ? total : items.length;
+  const ex = items.filter(d => d.example).length;
+  // modèles testés : distinct model.name
+  const models = new Set(items.map(d => d.model.name)).size;
+  // meilleur modèle : max generation_tok_s (sous-ligne = modèle · runtime · quant)
+  let best = null;
+  for (const d of items) { const g = d.metrics.generation_tok_s; if (g != null && (best == null || g > best.g)) best = { g, d }; }
+  // dernier run : max timestamp (sous-ligne = modèle)
+  const last = items.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+  // taux de succès sur les runs RÉELS (example: false) ; exemples comptés à part
+  const real = items.filter(d => !d.example);
+  const succ = real.filter(d => d.status === 'success').length;
+  const part = real.filter(d => d.status === 'partial').length;
+  const errn = real.filter(d => d.status === 'error').length;
+  // TTS optimal (différenciateur) : min time_to_solution sur les runs agent_task, « — » sinon
+  let tts = null, ttsTask = null;
+  for (const d of items) if (d.agent_task && d.agent_task.time_to_solution_s != null
+    && (tts == null || d.agent_task.time_to_solution_s < tts)) { tts = d.agent_task.time_to_solution_s; ttsTask = d.agent_task.name; }
+  const card = (label, value, sub) => `<div class="stat-card"><div class="stat-label">${esc(label)}</div><div class="stat-value">${value}</div><div class="stat-sub">${sub}</div></div>`;
+  const dateStr = new Date(last.timestamp).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const succRate = real.length ? `${succ}/${real.length}` : '—';
+  const ttsLabel = tts != null ? `${fmt(tts, 2)} s` : '—';
+  box.innerHTML = `<div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+    ${card('Runs', runsCount, `dont ${ex} exemple${ex > 1 ? 's' : ''}`)}
+    ${card('Modèles testés', models, 'modèles distincts')}
+    ${card('Meilleur modèle', best ? `${fmt(best.g, 2)} t/s` : '—',
+      best ? `${esc(best.d.model.name)} · ${esc(best.d.runtime.name)} · ${esc(best.d.quantization)}` : 'aucune mesure gen')}
+    ${card('Dernier run', dateStr, `${esc(last.model.name)}${last.example ? ' <span class="sub">ex</span>' : ''}`)}
+    ${card('Taux de succès', succRate,
+      real.length ? `sur ${real.length} réel${real.length > 1 ? 's' : ''} · ${part} partiel${part > 1 ? 's' : ''} · ${errn} erreur${errn > 1 ? 's' : ''}` : 'aucun run réel')}
+    ${card('TTS optimal', ttsLabel, tts != null ? esc(short(ttsTask, 28)) : 'aucune tâche agent')}</div>`;
+}
+
 /* ================= boot ================= */
 const page = location.pathname;
-const booted = /index\.html$|\/$/.test(page) ? listInit()
+const booted = page.includes('dashboard') ? dashboardInit()
+  : /index\.html$|\/$/.test(page) ? listInit()
   : page.includes('detail') ? detailInit()
   : page.includes('models') ? modelsInit()
   : page.includes('compare') ? compareInit() : null;

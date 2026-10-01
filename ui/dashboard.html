@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Local LLM Bench — Détail</title>
+<title>Local LLM Bench — Tableau de bord</title>
+<meta name="description" content="Vue d'ensemble des benchmarks LLM locaux : KPIs, meilleur modèle, dernier run, taux de succès.">
 <link rel="stylesheet" href="style.css">
 <script>(function(){try{var t=localStorage.getItem('llm-bench-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 </head>
@@ -12,7 +13,7 @@
   <div class="container">
     <span class="brand">Local LLM Bench<span class="brand-dot">.</span></span>
     <nav class="app-nav" aria-label="Navigation principale">
-      <a href="dashboard.html">Accueil</a>
+      <a href="dashboard.html" aria-current="page">Accueil</a>
       <a href="./">Runs</a>
       <a href="models.html">Modèles</a>
       <a href="compare.html">Comparer</a>
@@ -26,8 +27,20 @@
 </header>
 
 <main class="container view">
-  <p style="font-size:var(--text-xs);color:var(--c-text-faint)"><a href="./">← Runs</a> / <span id="crumb" class="mono"></span></p>
-  <div id="detail"><div class="skeleton-row" style="display:block"><div class="skeleton" style="width:35%;height:24px"></div></div><div class="skeleton-row"><div class="skeleton" style="width:100%;height:16px"></div></div><div class="skeleton-row"><div class="skeleton" style="width:60%;height:16px"></div></div></div>
+  <section class="card card-pad" aria-label="Vue d'ensemble">
+    <div style="display:flex; align-items:baseline; gap:var(--sp-2); flex-wrap:wrap">
+      <h2 style="font-size:var(--text-xl)">Vue d'ensemble</h2>
+      <p class="demo-note">Indicateurs sur l'ensemble de la base — les runs d'exemple restent marqués « ex » et comptés à part du taux de succès.</p>
+    </div>
+    <div id="kpis" style="margin-top:var(--sp-3)">
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+        <div class="stat-card"><div class="stat-value"><span class="skeleton" style="width:60%;height:24px;display:inline-block"></span></div></div>
+        <div class="stat-card"><div class="stat-value"><span class="skeleton" style="width:50%;height:24px;display:inline-block"></span></div></div>
+        <div class="stat-card"><div class="stat-value"><span class="skeleton" style="width:70%;height:24px;display:inline-block"></span></div></div>
+      </div>
+    </div>
+  </section>
+
   <div id="errorBox" class="alert" hidden>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span id="errorText"></span>
