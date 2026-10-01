@@ -21,6 +21,9 @@ vanilla JS (zéro dépendance côté UI) + API FastAPI/SQLite (zéro CORS).
 Cinq vues — Tableau de bord (KPIs), Runs (liste/filtres/sort), Modèles
 (groupés par fournisseur), Détail, Comparer (deltas + scatter).
 
+Dépôt GitHub : <https://github.com/HalloPreach/local-llm-bench>
+(lien également dans l'entête du dashboard).
+
 ### Captures (thème clair, 1280×900)
 
 | | Dashboard | Runs | Modèles | Détail | Comparer |
