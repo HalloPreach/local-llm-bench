@@ -138,15 +138,16 @@ function ttftChart(container, runs) {
 
 /* ================= VUE LISTE (index.html) ================= */
 const list = {
-  items: [], q: '', sort: { key: 'timestamp', dir: -1 }, page: 1,
+  items: [], q: '', sort: { key: 'date', dir: -1 }, page: 1,
   F: { model: '', runtime: '', quantization: '', gpu: '' },
 };
 
+/* Tri des colonnes métriques : valeurs brutes ; les metrics manquants (null)
+   sont toujours placés en fin de liste par le comparateur ci-dessous. */
 const SORTS = {
-  gen: d => (d.metrics.generation_tok_s ?? -1) * d.sort.dir,
-  ttft: d => (d.metrics.ttft_s == null ? Infinity : d.metrics.ttft_s) * d.sort.dir,
-  vram: d => (d.metrics.vram_peak_gb == null ? Infinity : d.metrics.vram_peak_gb) * d.sort.dir,
-  date: d => d.timestamp * d.sort.dir,
+  gen: d => d.metrics.generation_tok_s,
+  ttft: d => d.metrics.ttft_s,
+  vram: d => d.metrics.vram_peak_gb,
 };
 
 async function listInit() {
@@ -175,11 +176,14 @@ async function listInit() {
   });
   $('#prevBtn').addEventListener('click', () => { list.page--; renderList(); });
   $('#nextBtn').addEventListener('click', () => { list.page++; renderList(); });
-  $$('#runs th[data-sort]').forEach(th => th.addEventListener('click', () => {
+  // délégation : les th sont régénérés par chaque rendu du tableau
+  $('#runs').addEventListener('click', e => {
+    const th = e.target.closest('th[data-sort]');
+    if (!th) return;
     const k = th.dataset.sort;
     if (list.sort.key === k) list.sort.dir *= -1; else { list.sort.key = k; list.sort.dir = k === 'date' ? -1 : 1; }
     list.page = 1; renderList();
-  }));
+  });
   await listLoad();
 }
 
@@ -229,8 +233,14 @@ function clientFiltered() {
   if (list.q) rows = rows.filter(d => [d.model.name, d.runtime.name, d.quantization, d.hardware.gpu, d.status]
     .join(' ').toLowerCase().includes(list.q));
   const dir = list.sort.dir, key = list.sort.key;
-  rows = [...rows].sort((a, b) => key === 'date' ? a.timestamp.localeCompare(b.timestamp) * dir
-    : (SORTS[key](a) - SORTS[key](b)) || a.timestamp.localeCompare(b.timestamp));
+  rows = [...rows].sort((a, b) => {
+    if (key === 'date') return a.timestamp.localeCompare(b.timestamp) * dir;
+    const va = SORTS[key](a), vb = SORTS[key](b);
+    if (va == null && vb == null) return a.timestamp.localeCompare(b.timestamp);
+    if (va == null) return 1;   // metric manquant : toujours en fin de liste
+    if (vb == null) return -1;
+    return (vb - va) * dir;
+  });
   return rows;
 }
 
@@ -239,18 +249,18 @@ function renderList() {
   const total = rows.length, pages = Math.max(1, Math.ceil(total / PAGE));
   list.page = Math.min(list.page, pages);
   const start = (list.page - 1) * PAGE, pageRows = rows.slice(start, start + PAGE);
-  $$('#runs th[data-sort]').forEach(th => {
-    th.setAttribute('aria-sort', th.dataset.sort === list.sort.key ? (list.sort.dir > 0 ? 'ascending' : 'descending') : 'none');
-  });
   renderSummary(rows);
   const top = [...rows].filter(d => d.metrics.generation_tok_s != null)
     .sort((a, b) => b.metrics.generation_tok_s - a.metrics.generation_tok_s).slice(0, 10);
   barChart($('#genChart'), top.map(d => ({ label: `${d.model.name} · ${d.runtime.name}`, value: d.metrics.generation_tok_s })));
+  // dir=1 -> métriques décroissantes (plus grand en haut) ; date à l'inverse (dir=-1 -> plus récent en haut)
+  const descNow = list.sort.key === 'date' ? list.sort.dir < 0 : list.sort.dir > 0;
+  const as = k => list.sort.key === k ? (descNow ? 'descending' : 'ascending') : 'none';
   $('#runs').innerHTML = total ? (rows.some((_, i) => i < start + PAGE) ? (
     `<div class="table-wrap"><table class="cls-table"><caption class="sr-only">Runs filtrés et triables</caption><thead><tr>` +
     `<th>Modèle</th><th>Runtime</th><th>Quant</th><th>GPU</th>` +
-    `<th data-sort="gen">Gen t/s</th><th data-sort="ttft">TTFT</th><th data-sort="vram">VRAM</th>` +
-    `<th data-sort="date">Date</th><th>Statut</th></tr></thead><tbody>` +
+    `<th data-sort="gen" aria-sort="${as('gen')}">Gen t/s</th><th data-sort="ttft" aria-sort="${as('ttft')}">TTFT</th><th data-sort="vram" aria-sort="${as('vram')}">VRAM</th>` +
+    `<th data-sort="date" aria-sort="${as('date')}">Date</th><th>Statut</th></tr></thead><tbody>` +
     pageRows.map(d => {
       const m = d.metrics, best = d.metrics.generation_tok_s == (top[0] ? top[0].metrics.generation_tok_s : null);
       return `<tr><td><a href="/detail.html#/run/${esc(d.id)}">${esc(d.model.name)}${d.model.parameters ? `<span class="sub">${esc(d.model.parameters)}</span>` : ''}${d.example ? `<span class="sub"> ex</span>` : ''}</a></td>` +
