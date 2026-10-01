@@ -1,0 +1,488 @@
+[
+  {
+    "id": "run-2026-09-12-llama31-8b-q4km-5090",
+    "timestamp": "2026-09-12T09:15:00+00:00",
+    "model": {
+      "name": "Llama-3.1-8B-Instruct",
+      "parameters": "8B",
+      "arch": "llama"
+    },
+    "runtime": {
+      "name": "llama.cpp",
+      "version": "b4952"
+    },
+    "quantization": "Q4_K_M",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 4096,
+    "prompt_tokens": 1024,
+    "generation_tokens": 256,
+    "metrics": {
+      "prompt_processing_tok_s": 2180.5,
+      "generation_tok_s": 61.3,
+      "ttft_s": null,
+      "vram_peak_gb": 8.4,
+      "duration_s": 152.4
+    },
+    "status": "partial",
+    "raw_output": "llama-bench (llama.cpp b4952): prompt eval n=1024 -> 2180.5 t/s\nllama-bench: generation n=256 -> 61.3 t/s (ttft not reported by llama-bench)",
+    "example": true,
+    "command": "llama-bench -m Llama-3.1-8B-Instruct-Q4_K_M.gguf -p 1024 -n 256"
+  },
+  {
+    "id": "run-2026-09-14-mistral7b-q4k-5090",
+    "timestamp": "2026-09-14T14:02:00+00:00",
+    "model": {
+      "name": "Mistral-7B-Instruct-v0.3",
+      "parameters": "7B",
+      "arch": "mistral"
+    },
+    "runtime": {
+      "name": "llama.cpp",
+      "version": "b4952"
+    },
+    "quantization": "Q4_K_M",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 4096,
+    "prompt_tokens": 1024,
+    "generation_tokens": 256,
+    "metrics": {
+      "prompt_processing_tok_s": 2435.0,
+      "generation_tok_s": 68.7,
+      "ttft_s": null,
+      "vram_peak_gb": 7.9,
+      "duration_s": 134.9
+    },
+    "status": "partial",
+    "raw_output": "llama-bench: prompt eval n=1024 -> 2435.0 t/s\ngeneration n=256 -> 68.7 t/s",
+    "example": true,
+    "command": "llama-bench -m Mistral-7B-Instruct-v0.3-Q4_K_M.gguf -p 1024 -n 256"
+  },
+  {
+    "id": "run-2026-09-16-llama31-8b-q8-5090",
+    "timestamp": "2026-09-16T10:30:00+00:00",
+    "model": {
+      "name": "Llama-3.1-8B-Instruct",
+      "parameters": "8B",
+      "arch": "llama"
+    },
+    "runtime": {
+      "name": "llama.cpp",
+      "version": "b4952"
+    },
+    "quantization": "Q8_0",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 8192,
+    "prompt_tokens": 2048,
+    "generation_tokens": 512,
+    "metrics": {
+      "prompt_processing_tok_s": 1420.2,
+      "generation_tok_s": 44.1,
+      "ttft_s": null,
+      "vram_peak_gb": 14.2,
+      "duration_s": 312.5
+    },
+    "status": "partial",
+    "raw_output": "llama-bench Q8_0: prompt 1420.2 t/s, gen 44.1 t/s (quant heavier -> slower, VRAM 2x)",
+    "example": true,
+    "command": "llama-bench -m Llama-3.1-8B-Instruct-Q8_0.gguf -p 2048 -n 512"
+  },
+  {
+    "id": "run-2026-09-18-qwen14b-q4k-5090",
+    "timestamp": "2026-09-18T17:45:00+00:00",
+    "model": {
+      "name": "Qwen2.5-14B-Instruct",
+      "parameters": "14B",
+      "arch": "qwen"
+    },
+    "runtime": {
+      "name": "llama.cpp",
+      "version": "b4952"
+    },
+    "quantization": "Q4_K_M",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 8192,
+    "prompt_tokens": 2048,
+    "generation_tokens": 512,
+    "metrics": {
+      "prompt_processing_tok_s": 1250.8,
+      "generation_tok_s": 36.9,
+      "ttft_s": null,
+      "vram_peak_gb": 13.6,
+      "duration_s": 402.1
+    },
+    "status": "partial",
+    "raw_output": "llama-bench Qwen2.5-14B Q4_K_M: 1250.8 t/s prefill, 36.9 t/s decode",
+    "example": true,
+    "command": "llama-bench -m Qwen2.5-14B-Instruct-Q4_K_M.gguf -p 2048 -n 512"
+  },
+  {
+    "id": "run-2026-09-20-qwen3-32b-q4k-cpu",
+    "timestamp": "2026-09-20T08:20:00+00:00",
+    "model": {
+      "name": "Qwen3-32B",
+      "parameters": "32B",
+      "arch": "qwen"
+    },
+    "runtime": {
+      "name": "llama.cpp",
+      "version": "b4952"
+    },
+    "quantization": "Q4_K_M",
+    "hardware": {
+      "gpu": "CPU",
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 4096,
+    "prompt_tokens": 1024,
+    "generation_tokens": 256,
+    "metrics": {
+      "prompt_processing_tok_s": 21.4,
+      "generation_tok_s": 5.8,
+      "ttft_s": null,
+      "vram_peak_gb": null,
+      "duration_s": 2290.6
+    },
+    "status": "partial",
+    "raw_output": "llama-bench CPU-only (no GPU offload): 21.4 t/s prefill, 5.8 t/s decode — baseline for GPU-vs-CPU comparison",
+    "example": true,
+    "command": "llama-bench -m Qwen3-32B-Q4_K_M.gguf -p 1024 -n 256 (CPU-only, --n-gpu-layers 0)"
+  },
+  {
+    "id": "run-2026-09-22-llama31-8b-fp16-ninfer",
+    "timestamp": "2026-09-22T11:05:00+00:00",
+    "model": {
+      "name": "Llama-3.1-8B-Instruct",
+      "parameters": "8B",
+      "arch": "llama"
+    },
+    "runtime": {
+      "name": "NInfer",
+      "version": "v1.0.4"
+    },
+    "quantization": "FP16",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 8192,
+    "prompt_tokens": 2048,
+    "generation_tokens": 512,
+    "metrics": {
+      "prompt_processing_tok_s": 1890.4,
+      "generation_tok_s": 74.2,
+      "ttft_s": 0.41,
+      "vram_peak_gb": 19.8,
+      "duration_s": 262.3
+    },
+    "status": "success",
+    "raw_output": "{\"usage\": {\"prompt_tokens\": 2048, \"completion_tokens\": 512, \"total_tokens\": 2560}, \"timings\": {\"predicted_per_second\": 74.2, \"prompt_ms\": 1083.6, \"prompt_n\": 2048}}",
+    "example": true,
+    "command": "python bench.py --runtime NInfer --model Llama-3.1-8B-Instruct --quant FP16 --context 8192 --prompt-tokens 2048 --gen-tokens 512 --runtime-url http://127.0.0.1:30000 --version v1.0.4 --output runs/ninfer-llama31-fp16.json"
+  },
+  {
+    "id": "run-2026-09-24-qwen3-14b-nvfp4-ninfer",
+    "timestamp": "2026-09-24T16:30:00+00:00",
+    "model": {
+      "name": "Qwen3-14B",
+      "parameters": "14B",
+      "arch": "qwen"
+    },
+    "runtime": {
+      "name": "NInfer",
+      "version": "v1.1.0"
+    },
+    "quantization": "NVFP4",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 16384,
+    "prompt_tokens": 4096,
+    "generation_tokens": 512,
+    "metrics": {
+      "prompt_processing_tok_s": 980.3,
+      "generation_tok_s": 58.6,
+      "ttft_s": 1.92,
+      "vram_peak_gb": 18.9,
+      "duration_s": 487.7
+    },
+    "status": "success",
+    "raw_output": "{\"usage\": {\"prompt_tokens\": 4096, \"completion_tokens\": 512, \"total_tokens\": 4608}, \"timings\": {\"predicted_per_second\": 58.6, \"prompt_ms\": 4187.7}}",
+    "example": true,
+    "command": "python bench.py --runtime NInfer --model Qwen3-14B --quant NVFP4 --context 16384 --prompt-tokens 4096 --gen-tokens 512 --runtime-url http://127.0.0.1:30000 --version v1.1.0 --output runs/ninfer-qwen3-14b.json"
+  },
+  {
+    "id": "run-2026-09-27-llama31-8b-q8-sglang",
+    "timestamp": "2026-09-27T13:10:00+00:00",
+    "model": {
+      "name": "Llama-3.1-8B-Instruct",
+      "parameters": "8B",
+      "arch": "llama"
+    },
+    "runtime": {
+      "name": "SGLang",
+      "version": "v0.4.1"
+    },
+    "quantization": "Q8_0",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 4096,
+    "prompt_tokens": 1024,
+    "generation_tokens": 256,
+    "metrics": {
+      "prompt_processing_tok_s": null,
+      "generation_tok_s": 71.8,
+      "ttft_s": 0.38,
+      "vram_peak_gb": 15.1,
+      "duration_s": 238.9
+    },
+    "status": "partial",
+    "raw_output": "sglang bench_serving: mean ttft 0.38 s, output throughput 71.8 t/s (prefill not split out)",
+    "example": true,
+    "command": "python bench.py --runtime SGLang --model Llama-3.1-8B-Instruct --quant Q8_0 --context 4096 --prompt-tokens 1024 --gen-tokens 256 --runtime-url http://127.0.0.1:30000 --version v0.4.1 --output runs/sglang-llama31-q8.json"
+  },
+  {
+    "id": "run-2026-09-29-mistral7b-fp16-sglang",
+    "timestamp": "2026-09-29T19:00:00+00:00",
+    "model": {
+      "name": "Mistral-7B-Instruct-v0.3",
+      "parameters": "7B",
+      "arch": "mistral"
+    },
+    "runtime": {
+      "name": "SGLang",
+      "version": "v0.4.1"
+    },
+    "quantization": "FP16",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 8192,
+    "prompt_tokens": 2048,
+    "generation_tokens": 512,
+    "metrics": {
+      "prompt_processing_tok_s": null,
+      "generation_tok_s": 89.4,
+      "ttft_s": 0.29,
+      "vram_peak_gb": 17.3,
+      "duration_s": 291.4
+    },
+    "status": "partial",
+    "raw_output": "sglang bench_serving: mean ttft 0.29 s, output throughput 89.4 t/s — best FP16 result so far",
+    "example": true,
+    "command": "python bench.py --runtime SGLang --model Mistral-7B-Instruct-v0.3 --quant FP16 --context 8192 --prompt-tokens 2048 --gen-tokens 512 --runtime-url http://127.0.0.1:30000 --version v0.4.1 --output runs/sglang-mistral-fp16.json"
+  },
+  {
+    "id": "run-2026-10-01-qwen27b-nvfp4-ninfer-live",
+    "timestamp": "2026-10-01T10:53:30+00:00",
+    "model": {
+      "name": "qwen3.8-27b-nvfp4",
+      "parameters": "27B",
+      "arch": "qwen"
+    },
+    "runtime": {
+      "name": "NInfer",
+      "version": "v1.1.0"
+    },
+    "quantization": "NVFP4",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 131072,
+    "prompt_tokens": 409,
+    "generation_tokens": 128,
+    "metrics": {
+      "prompt_processing_tok_s": 154.05,
+      "generation_tok_s": 188.99,
+      "ttft_s": 32.797,
+      "vram_peak_gb": 25.7,
+      "duration_s": 38.344
+    },
+    "status": "success",
+    "raw_output": "{\"usage\": {\"completion_tokens\": 128, \"completion_tokens_details\": {\"reasoning_tokens\": 128}, \"prompt_tokens\": 409, \"prompt_tokens_details\": {\"cached_tokens\": 404}, \"total_tokens\": 537}, \"timings\": {\"cache_n\": 404, \"draft_n\": 298, \"draft_n_accepted\": 83, \"predicted_ms\": 681.7512999999999, \"predicted_n\": 128, \"predicted_per_second\": 186.28493997737888, \"predicted_per_token_ms\": 5.368120472440944, \"prompt_ms\": 32.457300000000004, \"prompt_n\": 5, \"prompt_per_second\": 154.04854994099938, \"prompt_per_token_ms\": 6.491460000000001}, \"model\": \"qwen3.8-27b-nvfp4\"}",
+    "command": "python bench.py --runtime NInfer --model qwen3.8-27b-nvfp4 --quant NVFP4 --context 131072 --prompt-tokens 512 --gen-tokens 128 --runtime-url http://127.0.0.1:30000 --version v1.1.0 --output runs/ninfer.json"
+  },
+  {
+    "id": "run-2026-10-01-qwen27b-nvfp4-131k-ninfer",
+    "timestamp": "2026-10-01T11:20:00+00:00",
+    "model": {
+      "name": "qwen3.8-27b-nvfp4",
+      "parameters": "27B",
+      "arch": "qwen"
+    },
+    "runtime": {
+      "name": "NInfer",
+      "version": "v1.1.0"
+    },
+    "quantization": "NVFP4",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 131072,
+    "prompt_tokens": 131072,
+    "generation_tokens": 1024,
+    "metrics": {
+      "prompt_processing_tok_s": 412.6,
+      "generation_tok_s": 141.3,
+      "ttft_s": 318.42,
+      "vram_peak_gb": 28.9,
+      "duration_s": 918.5
+    },
+    "status": "success",
+    "raw_output": "{\"usage\": {\"prompt_tokens\": 131072, \"completion_tokens\": 1024, \"total_tokens\": 132096}, \"timings\": {\"predicted_per_second\": 141.3, \"prompt_ms\": 317730.0, \"prompt_n\": 131072}} (long-context run: full 128k prefill, KV cache at 91% of VRAM)",
+    "example": true,
+    "command": "python bench.py --runtime NInfer --model qwen3.8-27b-nvfp4 --quant NVFP4 --context 131072 --prompt-tokens 131072 --gen-tokens 1024 --runtime-url http://127.0.0.1:30000 --version v1.1.0 --output runs/ninfer-qwen27b-131k.json"
+  },
+  {
+    "id": "run-2026-10-01-llamacpp-q4k-5090-error",
+    "timestamp": "2026-10-01T10:53:45+00:00",
+    "model": {
+      "name": "Llama-3.1-8B-Instruct",
+      "parameters": "8B",
+      "arch": "llama"
+    },
+    "runtime": {
+      "name": "llama.cpp",
+      "version": "b4952"
+    },
+    "quantization": "Q4_K_M",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 4096,
+    "prompt_tokens": 1024,
+    "generation_tokens": 256,
+    "metrics": {
+      "prompt_processing_tok_s": null,
+      "generation_tok_s": null,
+      "ttft_s": null,
+      "vram_peak_gb": null,
+      "duration_s": null
+    },
+    "status": "error",
+    "raw_output": "llama-bench (llama.cpp) not found on PATH or --runtime-bin. Install llama.cpp and add it to PATH to run a real benchmark.",
+    "command": "python bench.py --runtime llama.cpp --model Llama-3.1-8B-Instruct --quant Q4_K_M --context 4096 --prompt-tokens 1024 --gen-tokens 256 --runtime-bin llama-bench --output runs/llamacpp.json"
+  },
+  {
+    "id": "run-2026-10-01-sglang-q8-5090-error",
+    "timestamp": "2026-10-01T10:54:02+00:00",
+    "model": {
+      "name": "Llama-3.1-8B-Instruct",
+      "parameters": "8B",
+      "arch": "llama"
+    },
+    "runtime": {
+      "name": "SGLang",
+      "version": null
+    },
+    "quantization": "Q8_0",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 4096,
+    "prompt_tokens": 1024,
+    "generation_tokens": 256,
+    "metrics": {
+      "prompt_processing_tok_s": null,
+      "generation_tok_s": null,
+      "ttft_s": null,
+      "vram_peak_gb": null,
+      "duration_s": null
+    },
+    "status": "error",
+    "raw_output": "SGLang bench_serving not found on PATH or --runtime-bin. Install SGLang (pip install 'sglang[all]') and a running sglang server to run a real benchmark.",
+    "command": "python bench.py --runtime SGLang --model Llama-3.1-8B-Instruct --quant Q8_0 --context 4096 --prompt-tokens 1024 --gen-tokens 256 --runtime-bin bench_serving --runtime-url http://127.0.0.1:30000 --output runs/sglang.json"
+  },
+  {
+    "id": "run-2026-10-01-ninfer-qwen27b-oome",
+    "timestamp": "2026-10-01T12:10:00+00:00",
+    "model": {
+      "name": "qwen3.8-27b-nvfp4",
+      "parameters": "27B",
+      "arch": "qwen"
+    },
+    "runtime": {
+      "name": "NInfer",
+      "version": "v1.1.0"
+    },
+    "quantization": "NVFP4",
+    "hardware": {
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_vram_total_gb": 31.8,
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "ram_gb": 31.2,
+      "os": "Windows 11"
+    },
+    "context_length": 131072,
+    "prompt_tokens": 131072,
+    "generation_tokens": 2048,
+    "metrics": {
+      "prompt_processing_tok_s": null,
+      "generation_tok_s": null,
+      "ttft_s": null,
+      "vram_peak_gb": 31.2,
+      "duration_s": 24.7
+    },
+    "status": "error",
+    "raw_output": "CUDA OOM: KV cache for 131072 context exceeds free VRAM (31.2 GB in use, 0.6 GB free). Server restarted, run aborted before first token.",
+    "example": true,
+    "command": "python bench.py --runtime NInfer --model qwen3.8-27b-nvfp4 --quant NVFP4 --context 131072 --prompt-tokens 131072 --gen-tokens 2048 --runtime-url http://127.0.0.1:30000 --version v1.1.0 --output runs/ninfer-qwen27b-oome.json"
+  }
+]

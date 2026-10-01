@@ -61,11 +61,12 @@ for name, reqs in required.items():
         if r not in src:
             problems.append(f"{name}: manquant {r}")
 
-# la nav "Modèles" est présente sur les 4 pages
+# la nav "Modèles" est présente sur les 4 pages (liens relatifs : le site est
+# servi aussi en sous-répertoire sur GitHub Pages)
 for name in ('index.html', 'detail.html', 'compare.html', 'models.html'):
     src = (ROOT / 'ui' / name).read_text(encoding='utf-8')
-    if 'href="/models.html"' not in src:
-        problems.append(f"{name}: lien nav /models.html manquant")
+    if 'href="models.html"' not in src:
+        problems.append(f"{name}: lien nav models.html manquant")
 
 # Toutes les classes CSS référencées par app.js doivent exister dans style.css
 classes = set(re.findall(r'class="([\w\- ]+)"', js))
@@ -79,10 +80,11 @@ for token in ('--c-accent:', '--c-surface:', '--ch-1:', '[data-theme="dark"]'):
     if token not in css:
         problems.append(f"style.css : token/thème manquant {token!r}")
 
-# app.js consomme bien les 4 endpoints du backend
-for ep in ('/benchmarks', '/benchmarks/filters', '/benchmarks/compare'):
-    if ep not in js:
-        problems.append(f"app.js : endpoint non consommé {ep}")
+# app.js consomme bien les endpoints du backend (base relative ./benchmarks)
+if "const API = './benchmarks'" not in js:
+    problems.append("app.js : base d'API relative absente (./benchmarks)")
+if 'seed.json' not in js:
+    problems.append("app.js : repli démo statique (seed.json) absent")
 
 # app.js affiche bien les champs de reproductibilité / TTS / exemple
 for token in ('d.command', 'd.agent_task', 'd.example', 'modelsInit', 'Tâche agent'):

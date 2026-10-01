@@ -3,7 +3,9 @@
    Consomme : GET /benchmarks, /benchmarks/{id}, /benchmarks/compare, /benchmarks/filters.
    API montée par uvicorn (app:app) — même origine que les pages, donc /benchmarks. */
 
-const API = '/benchmarks';
+/* Base relative : fonctionne sur le serveur (uvicorn, pages servies à /) ET sur
+   GitHub Pages (site en /<repo>/, l'API n'existe pas → mode démo statique ci-dessous). */
+const API = './benchmarks';
 /* ponytail : la recherche libre + le tri sont faits côté client sur la page courante (page_size 200).
    S'il dépasse ~2k runs filtrés, déplacer q/sort dans l'API (index SQL) — pas avant. */
 const PAGE = 20;
@@ -33,6 +35,36 @@ async function getJSON(url, params, method) {
     throw new Error(msg);
   }
   return r.status === 204 ? null : r.json();
+}
+
+/* ---------- mode démo statique (GitHub Pages) ----------
+   Sans serveur, l'API répond 404 (hébergement statique) → on bascule sur
+   ./seed.json, la capture du jeu de démo. Sur un vrai API (uvicorn), rien de
+   tout ceci ne s'exécute : les appels passent en premier. */
+let _demo = null;
+async function demoRuns() {
+  if (_demo) return _demo;
+  try {
+    const r = await fetch('./seed.json');
+    if (!r.ok) { _demo = []; }
+    else _demo = (await r.json()).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
+  } catch (e) { _demo = []; }
+  return _demo;
+}
+function demoFilter(rows, p) {
+  let out = rows;
+  if (p.model) out = out.filter(d => d.model.name === p.model);
+  if (p.runtime) out = out.filter(d => d.runtime.name === p.runtime);
+  if (p.quantization) out = out.filter(d => d.quantization === p.quantization);
+  if (p.gpu) out = out.filter(d => d.hardware.gpu === p.gpu);
+  return out;
+}
+function demoFilters(rows) {
+  const u = a => [...new Set(a)].sort();
+  const stamps = rows.map(d => d.timestamp).sort();
+  return { models: u(rows.map(d => d.model.name)), runtimes: u(rows.map(d => d.runtime.name)),
+    quantizations: u(rows.map(d => d.quantization)), gpus: u(rows.map(d => d.hardware.gpu)),
+    date_min: stamps[0] ?? null, date_max: stamps.at(-1) ?? null };
 }
 
 /* ---------- thème (3 pages) ---------- */
@@ -107,7 +139,7 @@ function ttftChart(container, runs) {
 /* ================= VUE LISTE (index.html) ================= */
 const list = {
   items: [], q: '', sort: { key: 'timestamp', dir: -1 }, page: 1,
-  F: { model: '', runtime: '', quant: '', gpu: '' },
+  F: { model: '', runtime: '', quantization: '', gpu: '' },
 };
 
 const SORTS = {
@@ -132,7 +164,7 @@ async function listInit() {
     if (list.F.model) $('#f-model').value = list.F.model;
   }
   $('#q').addEventListener('input', e => { list.q = e.target.value.trim().toLowerCase(); list.page = 1; renderList(); });
-  for (const [id, k] of [['#f-model', 'model'], ['#f-runtime', 'runtime'], ['#f-quant', 'quant'], ['#f-gpu', 'gpu']])
+  for (const [id, k] of [['#f-model', 'model'], ['#f-runtime', 'runtime'], ['#f-quant', 'quantization'], ['#f-gpu', 'gpu']])
     $(id).addEventListener('change', e => { list.F[k] = e.target.value; list.page = 1; renderList(); });
   $('#resetBtn').addEventListener('click', () => {
     list.q = ''; list.page = 1;
@@ -151,7 +183,16 @@ async function listInit() {
   await listLoad();
 }
 
-function safeGetFilters() { return getJSON(`${API}/filters`).catch(() => null); }
+function safeGetFilters() {
+  // démo statique : l'API répond 404 sur un hébergement sans serveur
+  return getJSON(`${API}/filters`).catch(async e => {
+    if (e instanceof TypeError || /fetch|404|load/i.test(e.message)) {
+      const rows = await demoRuns();
+      return rows.length ? demoFilters(rows) : null;
+    }
+    return null;
+  });
+}
 
 function fillSelect(sel, values) {
   const s = $(sel), cur = s.value;
@@ -166,7 +207,16 @@ async function listLoad() {
     const data = await getJSON(API, p);
     list.items = data.items;
     renderList();
-  } catch (e) { showListError(e.message); }
+  } catch (e) {
+    // démo statique : API absente → jeu de démo local (seed.json)
+    if (e instanceof TypeError || /fetch|404|load/i.test(e.message)) {
+      const rows = (await demoRuns()).filter(d => demoFilter([d], p).length);
+      list.items = rows.slice(0, 200);
+      renderList();
+      return;
+    }
+    showListError(e.message);
+  }
 }
 
 function showListError(msg) {
@@ -267,9 +317,27 @@ async function detailInit() {
   initTheme();
   const box = $('#detail'), err = $('#errorBox');
   const runId = (location.hash.match(/#\/run\/(.+)$/) || [])[1];
-  if (!runId) { location.replace('/'); return; }
+  if (!runId) { location.replace('./'); return; }
+  let d;
   try {
-    const d = await getJSON(`${API}/${encodeURIComponent(runId)}`);
+    d = await getJSON(`${API}/${encodeURIComponent(runId)}`);
+  } catch (e) {
+    // démo statique : API absente → jeu de démo local (seed.json)
+    if (!(e instanceof TypeError || /fetch|404|load/i.test(e.message))) {
+      box.innerHTML = '';
+      err.hidden = false;
+      $('#errorText').textContent = 'Erreur API — ' + e.message;
+      return;
+    }
+    const found = (await demoRuns()).find(x => x.id === runId);
+    if (!found) {
+      box.innerHTML = '';
+      err.hidden = false;
+      $('#errorText').innerHTML = `Run introuvable : ${esc(runId)}. <a href="./">← Retour aux runs</a>`;
+      return;
+    }
+    d = found;
+  }
     const m = d.metrics, h = d.hardware;
     $('#crumb').textContent = d.id;
     const opt = v => v != null ? esc(v) : '<span style="color:var(--c-text-faint)">—</span>';
@@ -316,14 +384,9 @@ async function detailInit() {
     </section>` : ''}`;
     $('#delBtn').addEventListener('click', async () => {
       if (!confirm('Supprimer définitivement ce run ?')) return;
-      try { await getJSON(`${API}/${encodeURIComponent(runId)}`, null, 'DELETE'); location.href = '/'; }
+      try { await getJSON(`${API}/${encodeURIComponent(runId)}`, null, 'DELETE'); location.href = './'; }
       catch (e) { err.hidden = false; $('#errorText').textContent = 'Suppression impossible — ' + e.message; }
     });
-  } catch (e) {
-    box.innerHTML = '';
-    err.hidden = false;
-    $('#errorText').textContent = /not found/i.test(e.message) ? `Run introuvable : ${esc(runId)}. <a href="/">← Retour aux runs</a>` : 'Erreur API — ' + e.message;
-  }
 }
 
 /* ================= VUE COMPARAISON (compare.html) ================= */
@@ -339,8 +402,14 @@ const CMP_ROWS = [
 async function compareInit() {
   initTheme();
   let items = [];
-  try { items = (await getJSON(API, { page_size: 200 })).items; }
-  catch (e) { const b = $('#errorBox'); b.hidden = false; $('#errorText').textContent = 'API injoignable — ' + e.message; return; }
+  try {
+    items = (await getJSON(API, { page_size: 200 })).items;
+  } catch (e) {
+    // démo statique : API absente → jeu de démo local (seed.json)
+    if (e instanceof TypeError || /fetch|404|load/i.test(e.message)) {
+      items = (await demoRuns()).slice(0, 200);
+    } else { const b = $('#errorBox'); b.hidden = false; $('#errorText').textContent = 'API injoignable — ' + e.message; return; }
+  }
   if (!items.length) {
     $('#runList').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><h3>Base vide</h3><p>Aucun run à comparer — insérez d\'abord des runs via l\'API.</p></div>';
     return;
@@ -368,13 +437,29 @@ async function runCompare() {
   const err = $('#errorBox'); err.hidden = true;
   $('#compareResult').hidden = true;
   let res;
-  try { res = await getJSON(`${API}/compare`, { ids: ids.join(',') }); }
-  catch (e) { err.hidden = false; $('#errorText').textContent = e.message; return; }
+  try {
+    res = await getJSON(`${API}/compare`, { ids: ids.join(',') });
+  } catch (e) {
+    // démo statique : compare sur le jeu de démo local
+    if (e instanceof TypeError || /fetch|404|load/i.test(e.message)) {
+      const all = await demoRuns();
+      const found = all.filter(d => ids.includes(d.id));
+      renderCompare(found);
+      return;
+    }
+    err.hidden = false; $('#errorText').textContent = e.message;
+    return;
+  }
   if (res.missing.length) {
     err.hidden = false;
     $('#errorText').innerHTML = `Runs introuvables : <span class="mono">${res.missing.map(esc).join(', ')}</span> — exclus de la comparaison.`;
   }
-  const runs = res.runs.map((d, i) => ({ d, color: CH_COLORS[i % CH_COLORS.length],
+  renderCompare(res.runs);
+}
+
+/* rend la comparaison (table + scatter + TTFT) — partagé API / démo statique */
+function renderCompare(found) {
+  const runs = found.map((d, i) => ({ d, color: CH_COLORS[i % CH_COLORS.length],
     label: `${d.model.name} · ${d.runtime.name}`, id: d.id,
     gen: d.metrics.generation_tok_s, vram: d.metrics.vram_peak_gb, ttft: d.metrics.ttft_s }));
   renderCmpTable(runs);
@@ -416,8 +501,14 @@ function renderCmpTable(runs) {
 async function modelsInit() {
   initTheme();
   let items = [];
-  try { items = (await getJSON(API, { page_size: 200 })).items; }
-  catch (e) { const b = $('#errorBox'); b.hidden = false; $('#errorText').textContent = 'API injoignable — ' + e.message; return; }
+  try {
+    items = (await getJSON(API, { page_size: 200 })).items;
+  } catch (e) {
+    // démo statique : API absente → jeu de démo local (seed.json)
+    if (e instanceof TypeError || /fetch|404|load/i.test(e.message)) {
+      items = (await demoRuns()).slice(0, 200);
+    } else { const b = $('#errorBox'); b.hidden = false; $('#errorText').textContent = 'API injoignable — ' + e.message; return; }
+  }
   if (!items.length) {
     $('#models').innerHTML = '<div class="empty-state" style="padding:var(--sp-4)"><h3>Base vide</h3><p>Aucun run — insérez des runs via l\'API (POST /benchmarks).</p></div>';
     return;
