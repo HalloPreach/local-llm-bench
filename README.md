@@ -1,25 +1,34 @@
 # Local LLM Bench
 
-## Requêtes nInfer en direct
+## Requêtes nInfer accessibles à distance
 
 La page [Requêtes](https://hallopreach.github.io/local-llm-bench/ui/requests.html)
-est intégrée au même site GitHub Pages. Elle affiche le débit médian en tokens/s,
-le TTFT, le temps total de réponse et l'historique des requêtes. Elle se
-rafraîchit toutes les 5 secondes tant que l'onglet est visible.
+lit un instantané public hébergé par le même site GitHub Pages. Elle fonctionne
+sur tout PC sans connexion au service local. Les indicateurs couvrent tout le
+journal; les 1 000 dernières requêtes sont disponibles et 200 lignes sont affichées.
 
-Les mesures proviennent du journal opérationnel de nInfer sur **ce PC**. Le
-service local ci-dessous écoute seulement sur `127.0.0.1:8765`; seuls les
-champs de métriques sont transmis à la page. Aucun prompt, réponse ou secret
-n'est stocké dans GitHub Pages. Le navigateur peut demander l'autorisation
-d'accéder au réseau local lors de la première visite.
+L'instantané contient seulement les horodatages, états, nombres de tokens,
+débit, TTFT et temps total de réponse. Aucun prompt, réponse, secret, nom de
+modèle ou identifiant de requête n'est exporté. Sa publication publique a été
+explicitement autorisée par le propriétaire du site.
+
+Sur le PC qui exécute nInfer, une tâche Windows publie les métriques toutes les
+10 minutes et à l'ouverture de session, via le compte GitHub connecté à `gh`.
+Le PC doit être allumé, connecté à Internet et la session utilisateur ouverte.
+GitHub Pages ajoute son délai de déploiement; la date de synchronisation apparaît
+sur la page, qui recharge les données toutes les 30 secondes.
 
 ```powershell
-python ninfer_bridge.py
+gh auth login
+.\install_metrics_sync.ps1
+# si le journal n'est pas détecté :
+.\install_metrics_sync.ps1 -LogPath C:\chemin\server.stderr.log
 ```
 
-Le journal est détecté automatiquement dans
-`%LOCALAPPDATA%\ninfer-windows\*\server.stderr.log`. Pour un autre chemin :
-`python ninfer_bridge.py --log C:\chemin\journal.log`.
+Relancer manuellement : `python sync_metrics.py --log C:\chemin\server.stderr.log`.
+Retirer la tâche : `Unregister-ScheduledTask -TaskName LocalLLMBenchMetricsSync`.
+Les échecs sont consignés localement dans `.metrics-sync.log` (exclu de Git).
+Le pont `ninfer_bridge.py` reste disponible pour une lecture locale indépendante.
 
 Le TTS de la partie benchmarks désigne *time-to-solution*; le temps total de
 réponse des requêtes nInfer est affiché séparément pour éviter toute ambiguïté.

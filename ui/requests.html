@@ -20,8 +20,8 @@
 </div></header>
 
 <main class="container view requests-view">
-  <div class="requests-heading"><div><h1>Requêtes nInfer</h1><p class="demo-note">Mesures de votre instance locale : débit, premier token et durée complète de chaque réponse.</p></div><span id="connection" class="badge badge--neutral" role="status">Connexion…</span></div>
-  <div id="bridgeHelp" class="sample-banner" hidden>Le service local nInfer est indisponible. Démarrez <code>python ninfer_bridge.py</code> sur ce PC, puis autorisez l’accès au réseau local si le navigateur le demande. Aucune mesure n’est envoyée à GitHub.</div>
+  <div class="requests-heading"><div><h1>Requêtes nInfer</h1><p class="demo-note">Débit, premier token et durée complète de chaque réponse. Métriques publiques synchronisées depuis le PC nInfer toutes les 10 minutes.</p></div><span id="connection" class="badge badge--neutral" role="status">Chargement…</span></div>
+  <div id="bridgeHelp" class="sample-banner" hidden>Les métriques synchronisées sont momentanément indisponibles. La page réessaie automatiquement.</div>
   <section class="stat-grid requests-stats" aria-label="Indicateurs des requêtes">
     <div class="stat-card"><div class="stat-label">Requêtes</div><div class="stat-value" id="count">—</div><div class="stat-sub">sur la période</div></div>
     <div class="stat-card"><div class="stat-label">Débit médian</div><div class="stat-value" id="speed">—</div><div class="stat-sub">tokens/s</div></div>
@@ -29,7 +29,7 @@
     <div class="stat-card"><div class="stat-label">Temps total médian</div><div class="stat-value" id="total">—</div><div class="stat-sub">du début à la fin de la réponse</div></div>
   </section>
   <section class="card card-pad requests-section" aria-label="Historique des requêtes">
-    <div class="requests-toolbar"><div><h2>Historique</h2><p id="updated" class="demo-note">Actualisation automatique toutes les 5 secondes</p></div><label for="period">Période <select id="period"><option value="3600000">1 heure</option><option value="86400000" selected>24 heures</option><option value="604800000">7 jours</option><option value="all">Tout</option></select></label></div>
+    <div class="requests-toolbar"><div><h2>Historique</h2><p id="updated" class="demo-note">Recherche des dernières métriques…</p></div><label for="period">Période <select id="period"><option value="3600000">1 heure</option><option value="86400000" selected>24 heures</option><option value="604800000">7 jours</option><option value="all">Tout</option></select></label></div>
     <div class="table-wrap"><table class="cls-table"><thead><tr><th>Heure</th><th>État</th><th>Débit</th><th>TTFT</th><th>Temps total</th><th>Tokens entrée / sortie</th></tr></thead><tbody id="requestRows"><tr><td colspan="6">Chargement…</td></tr></tbody></table></div>
   </section>
 </main>

@@ -8,3 +8,5 @@ bench.db
 *.db-shm
 bench.db.old
 bench.db.bak-*
+.metrics-sync.log
+logs/
