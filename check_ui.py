@@ -86,6 +86,11 @@ if "const API = './benchmarks'" not in js:
 if 'seed.json' not in js:
     problems.append("app.js : repli démo statique (seed.json) absent")
 
+# La boîte d'erreur (display:flex) ne doit pas rester visible quand elle est
+# masquée via l'attribut hidden — sinon bannière rouge vide en bas de chaque page.
+if '.alert[hidden]{display:none}' not in css:
+    problems.append("style.css : .alert[hidden]{display:none} absent (bannière d'erreur toujours visible)")
+
 # app.js affiche bien les champs de reproductibilité / TTS / exemple
 for token in ('d.command', 'd.agent_task', 'd.example', 'modelsInit', 'Tâche agent'):
     if token not in js:

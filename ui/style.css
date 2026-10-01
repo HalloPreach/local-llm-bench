@@ -333,6 +333,7 @@ table.cls-table{width:100%; border-collapse:collapse; background:var(--c-surface
   border-radius:var(--r-md); padding:var(--sp-3); font-size:var(--text-sm);
 }
 .alert svg{flex:none}
+.alert[hidden]{display:none}
 
 /* 4.9 Graphiques (SVG natif, sans lib) */
 .chart{background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:var(--sp-4)}
