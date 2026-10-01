@@ -14,6 +14,42 @@ uvicorn app:app --port 8000                # API + dashboard sur http://127.0.0.
 Le dashboard est à `http://127.0.0.1:8000/` (les pages `index`, `models.html`,
 `detail.html`, `compare.html` sont servies par la même origine que l'API).
 
+## Présentation portfolio
+
+Projet de référence : un dashboard de benchmarks de LLM **locaux** en
+vanilla JS (zéro dépendance côté UI) + API FastAPI/SQLite (zéro CORS).
+Cinq vues — Tableau de bord (KPIs), Runs (liste/filtres/sort), Modèles
+(groupés par fournisseur), Détail, Comparer (deltas + scatter).
+
+### Captures (thème clair, 1280×900)
+
+| | Dashboard | Runs | Modèles | Détail | Comparer |
+|---|---|---|---|---|---|
+| | `docs/screenshots/dashboard.png` | `runs.png` | `models.png` | `detail.png` | `compare.png` |
+
+### Critères de qualité
+
+- **Zéro dépendance UI** : HTML/CSS/JS vanilla, graphiques SVG maison.
+- **Zéro CORS** : l'API monte `ui/` à la racine → même origine.
+- **Contrat de données** : payload validé contre `schema.json`
+  (draft 2020-12, `additionalProperties=false`).
+- **Portes d'auto-contrôle** (à relancer avant toute livraison) :
+  `check_ui.py`, `check_bench.py`, `check_schema.py`, `check_kpis.py`,
+  `check_models.js`, `e2e_validate.py` (123 cas).
+- **Vérification navigateur** : console JS propre (0 erreur), navigation
+  entre vues, responsive 375px (pas de débordement horizontal),
+  bascule clair/sombre, accessibilité de base (h1 par page, labels,
+  `aria-current`).
+
+### Prochaines étapes
+
+Voir `docs/PRODUCT_POLISH_PLAN.md`. Points ouverts : alimenter
+`agent_task.time_to_solution_s` via `bench.py` (la ligne TTS du
+dashboard affiche « — » tant que vide), et déplacer les filtres/sort
+dans l'API si la base dépasse ~2k runs (voir les `# ponytail` dans
+`app.py` / `app.js`).
+
+
 ## Insérer des runs
 
 1. **Exécuter un vrai benchmark** avec le collecteur `bench.py` :

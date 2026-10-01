@@ -105,6 +105,12 @@ for token in ('.group-row', '.group-label'):
     if token not in css:
         problems.append(f"style.css : groupe modèles absent {token!r}")
 
+# hiérarchie de titres : chaque page a son <h1> (visuellement masqué en .sr-only)
+for name in ('index.html', 'detail.html', 'compare.html', 'models.html', 'dashboard.html'):
+    src = (ROOT / 'ui' / name).read_text(encoding='utf-8')
+    if not re.search(r'<h1\b[^>]*>', src):
+        problems.append(f"{name}: <h1> manquant (hiérarchie de titres / SEO)")
+
 if problems:
     print("ECHEC — check_ui.py")
     for pr in problems:
