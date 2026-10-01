@@ -140,12 +140,13 @@ button,input,select{font:inherit; color:inherit}
 .app-nav a[aria-current="page"]{background:var(--c-accent-soft); color:var(--c-accent)}
 .app-header .spacer{flex:1}
 @media (max-width:639px){
-  .app-nav{display:none}
-  .app-header .mobile-nav{display:flex}
+  /* Mobile : pas de markup .mobile-nav — on garde .app-nav (elle s'enroule sur
+     plusieurs lignes) au lieu de la cacher. Le brand cède la place, la bascule
+     de thème reste pleinement fonctionnelle sur la 2e ligne. */
+  .brand{display:none}
+  .app-nav{display:flex; flex-wrap:wrap; flex-basis:100%; margin-left:0}
+  .app-header .container{flex-wrap:wrap}
 }
-.mobile-nav{display:none; gap:var(--sp-1); margin-left:auto; margin-right:var(--sp-2)}
-.mobile-nav a{padding:var(--sp-1) var(--sp-2); border-radius:var(--r-sm); color:var(--c-text-muted); font-size:var(--text-sm)}
-.mobile-nav a[aria-current="page"]{background:var(--c-accent-soft); color:var(--c-accent)}
 
 /* Sélecteur de thème (switch accessible) */
 .theme-toggle{

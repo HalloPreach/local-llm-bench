@@ -110,6 +110,9 @@ for name in ('index.html', 'detail.html', 'compare.html', 'models.html', 'dashbo
     src = (ROOT / 'ui' / name).read_text(encoding='utf-8')
     if not re.search(r'<h1\b[^>]*>', src):
         problems.append(f"{name}: <h1> manquant (hiérarchie de titres / SEO)")
+    # navigation : le lien actif doit porter aria-current="page" (repère + a11y)
+    if not re.search(r'<a\b[^>]*aria-current="page"[^>]*>', src):
+        problems.append(f"{name}: nav sans lien actif aria-current=\"page\"")
 
 if problems:
     print("ECHEC — check_ui.py")
