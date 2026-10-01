@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-01T10:53:30+00:00",
+  "model": {
+    "name": "qwen3.8-27b-nvfp4"
+  },
+  "runtime": {
+    "name": "NInfer",
+    "version": "v1.1.0"
+  },
+  "quantization": "NVFP4",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_vram_total_gb": 31.8,
+    "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+    "ram_gb": 31.2,
+    "os": "Windows 11"
+  },
+  "context_length": 131072,
+  "prompt_tokens": 409,
+  "generation_tokens": 128,
+  "metrics": {
+    "prompt_processing_tok_s": 154.05,
+    "generation_tok_s": 188.99,
+    "ttft_s": 32.797,
+    "vram_peak_gb": 25.7,
+    "duration_s": 38.344
+  },
+  "status": "success",
+  "raw_output": "{\"usage\": {\"completion_tokens\": 128, \"completion_tokens_details\": {\"reasoning_tokens\": 128}, \"prompt_tokens\": 409, \"prompt_tokens_details\": {\"cached_tokens\": 404}, \"total_tokens\": 537}, \"timings\": {\"cache_n\": 404, \"draft_n\": 298, \"draft_n_accepted\": 83, \"predicted_ms\": 681.7512999999999, \"predicted_n\": 128, \"predicted_per_second\": 186.28493997737888, \"predicted_per_token_ms\": 5.368120472440944, \"prompt_ms\": 32.457300000000004, \"prompt_n\": 5, \"prompt_per_second\": 154.04854994099938, \"prompt_per_token_ms\": 6.491460000000001}, \"model\": \"qwen3.8-27b-nvfp4\"}"
+}

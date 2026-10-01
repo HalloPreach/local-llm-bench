@@ -1,0 +1,33 @@
+{
+  "id": "run-2026-10-01-llama31-8b-q4km-rtx4090",
+  "timestamp": "2026-10-01T14:30:00+00:00",
+  "model": {
+    "name": "Llama-3.1-8B-Instruct",
+    "parameters": "8B",
+    "arch": "llama"
+  },
+  "runtime": {
+    "name": "llama.cpp",
+    "version": "b4952"
+  },
+  "quantization": "Q4_K_M",
+  "hardware": {
+    "gpu": "NVIDIA RTX 4090",
+    "gpu_vram_total_gb": 24,
+    "cpu": "AMD Ryzen 9 7950X",
+    "ram_gb": 64,
+    "os": "Windows 11"
+  },
+  "context_length": 4096,
+  "prompt_tokens": 1024,
+  "generation_tokens": 256,
+  "metrics": {
+    "prompt_processing_tok_s": 2410.3,
+    "generation_tok_s": 52.4,
+    "ttft_s": 0.62,
+    "vram_peak_gb": 7.1,
+    "duration_s": 138.7
+  },
+  "status": "success",
+  "raw_output": "llama-bench: model  = Llama-3.1-8B-Instruct-Q4_K_M\nllama-bench: test     = prompt eval  n = 1024 tokens\nllama-bench: prompt eval  time =    424.8 ms  -> 2410.3 t/s\nllama-bench: test     = generation  n = 256 tokens\nllama-bench: gen       time =   4885.4 ms  ->   52.4 t/s"
+}

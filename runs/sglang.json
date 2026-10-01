@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-01T10:53:45+00:00",
+  "model": {
+    "name": "Llama-3.1-8B-Instruct"
+  },
+  "runtime": {
+    "name": "SGLang",
+    "version": null
+  },
+  "quantization": "Q8_0",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_vram_total_gb": 31.8,
+    "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+    "ram_gb": 31.2,
+    "os": "Windows 11"
+  },
+  "context_length": 4096,
+  "prompt_tokens": 1024,
+  "generation_tokens": 256,
+  "metrics": {
+    "prompt_processing_tok_s": null,
+    "generation_tok_s": null,
+    "ttft_s": null,
+    "vram_peak_gb": null,
+    "duration_s": null
+  },
+  "status": "error",
+  "raw_output": "SGLang bench_serving not found on PATH or --runtime-bin. Install SGLang (pip install 'sglang[all]') and a running sglang server to run a real benchmark."
+}

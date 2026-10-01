@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local LLM Bench — Détail</title>
+<link rel="stylesheet" href="/style.css">
+<script>(function(){try{var t=localStorage.getItem('llm-bench-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+</head>
+<body>
+<header class="app-header">
+  <div class="container">
+    <span class="brand">Local LLM Bench<span class="brand-dot">.</span></span>
+    <nav class="app-nav" aria-label="Navigation principale">
+      <a href="/">Runs</a>
+      <a href="/models.html">Modèles</a>
+      <a href="/compare.html" aria-current="page">Comparer</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Basculer le thème sombre">
+      <span class="track"><span class="thumb"></span></span>
+      <span id="themeLabel">Thème clair</span>
+    </button>
+  </div>
+</header>
+
+<main class="container view">
+  <p style="font-size:var(--text-xs);color:var(--c-text-faint)"><a href="/">← Runs</a> / <span id="crumb" class="mono"></span></p>
+  <div id="detail"></div>
+  <div id="errorBox" class="alert" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="errorText"></span>
+  </div>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

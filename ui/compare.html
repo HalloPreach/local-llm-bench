@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local LLM Bench — Comparaison</title>
+<link rel="stylesheet" href="/style.css">
+<script>(function(){try{var t=localStorage.getItem('llm-bench-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+</head>
+<body>
+<header class="app-header">
+  <div class="container">
+    <span class="brand">Local LLM Bench<span class="brand-dot">.</span></span>
+    <nav class="app-nav" aria-label="Navigation principale">
+      <a href="/">Runs</a>
+      <a href="/models.html">Modèles</a>
+      <a href="/compare.html" aria-current="page">Comparer</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Basculer le thème sombre">
+      <span class="track"><span class="thumb"></span></span>
+      <span id="themeLabel">Thème clair</span>
+    </button>
+  </div>
+</header>
+
+<main class="container view">
+  <section class="card" style="overflow:hidden" aria-label="Sélection des runs">
+    <div class="card-pad" style="background:var(--c-surface-2)">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); flex-wrap:wrap">
+        <div>
+          <h3 style="font-size:var(--text-base); font-weight:600">Runs à comparer <span class="badge badge--accent" id="selCount">0 / 5</span></h3>
+          <p class="demo-note" style="margin-top:var(--sp-1)">Sélectionner 2 à 5 runs — un run par couleur de la palette, le 1er sélectionné est la référence des deltas.</p>
+        </div>
+        <button class="btn btn--primary" type="button" id="goBtn" disabled>Comparer (0)</button>
+      </div>
+      <div class="select-list" id="runList" style="margin-top:var(--sp-3); grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+        <div class="skeleton" style="height:40px;grid-column:1/-1"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="compareResult" hidden>
+    <section class="card" style="overflow:hidden" aria-label="Table de comparaison">
+      <div class="card-pad"><div id="cmpTable"></div></div>
+    </section>
+    <section style="margin-top:var(--sp-4); display:grid; gap:var(--sp-4); grid-template-columns:repeat(auto-fit,minmax(300px,1fr))" aria-label="Graphiques de comparaison">
+      <figure class="chart" style="margin:0">
+        <h4>Gen tok/s × VRAM</h4>
+        <p class="chart-sub">Compromis vitesse / mémoire</p>
+        <div id="scatter"></div>
+        <div class="legend" id="scatterLegend" aria-hidden="true"></div>
+      </figure>
+      <figure class="chart" style="margin:0">
+        <h4>TTFT par run</h4>
+        <p class="chart-sub">Plus bas = meilleur (s)</p>
+        <div id="ttftChart"></div>
+      </figure>
+    </section>
+  </div>
+
+  <div id="errorBox" class="alert" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="errorText"></span>
+  </div>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

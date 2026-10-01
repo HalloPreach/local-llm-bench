@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local LLM Bench — Runs</title>
+<meta name="description" content="Dashboard des runs de benchmarks LLM locaux : liste, filtres, tri, graphiques.">
+<link rel="stylesheet" href="/style.css">
+<script>/* thème avant rendu pour éviter le flash */(function(){try{var t=localStorage.getItem('llm-bench-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+</head>
+<body>
+<header class="app-header">
+  <div class="container">
+    <span class="brand">Local LLM Bench<span class="brand-dot">.</span></span>
+    <nav class="app-nav" aria-label="Navigation principale">
+      <a href="/" aria-current="page">Runs</a>
+      <a href="/models.html">Modèles</a>
+      <a href="/compare.html">Comparer</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Basculer le thème sombre">
+      <span class="track"><span class="thumb"></span></span>
+      <span id="themeLabel">Thème clair</span>
+    </button>
+  </div>
+</header>
+
+<main class="container view">
+  <!-- Filtres -->
+  <section class="filter-bar" aria-label="Filtres" id="filterBar">
+    <div class="cls-field" style="flex:1 1 220px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="search" id="q" placeholder="Rechercher (modèle, quant, GPU, runtime)…" aria-label="Rechercher">
+    </div>
+    <div class="cls-field"><label for="f-model">Modèle</label><select id="f-model"><option value="">Tous</option></select></div>
+    <div class="cls-field"><label for="f-runtime">Runtime</label><select id="f-runtime"><option value="">Tous</option></select></div>
+    <div class="cls-field"><label for="f-quant">Quant</label><select id="f-quant"><option value="">Toutes</option></select></div>
+    <div class="cls-field"><label for="f-gpu">GPU</label><select id="f-gpu"><option value="">Tous</option></select></div>
+    <button class="btn btn--ghost btn--sm" type="button" id="resetBtn">Réinitialiser</button>
+  </section>
+
+  <!-- Résumé du jeu filtré -->
+  <section class="card card-pad" aria-label="Résumé">
+    <div id="summary" style="min-height:56px">
+      <div class="skeleton-row" style="display:block"><div class="skeleton" style="width:40%;height:20px"></div></div>
+    </div>
+  </section>
+
+  <!-- Graphique principal : Gen tok/s des runs filtrés -->
+  <section class="chart" aria-label="Graphique Gen tok/s">
+    <h4>Gen tok/s — runs filtrés</h4>
+    <p class="chart-sub" id="chartSub">Plus haut = meilleur · top 10 du tri actuel</p>
+    <div id="genChart"></div>
+  </section>
+
+  <!-- Table desktop / cartes mobile -->
+  <section class="card" style="overflow:hidden" aria-label="Liste des runs">
+    <div id="runs"><div class="skeleton-row"><div class="skeleton" style="width:30%"></div><div class="skeleton" style="width:20%"></div><div class="skeleton" style="width:15%"></div></div></div>
+    <div class="pager" id="pager" hidden>
+      <span id="pagerInfo"></span>
+      <button class="page-btn" type="button" id="prevBtn" aria-label="Page précédente">←</button>
+      <span id="pagerPages" style="display:inline-flex;gap:var(--sp-2);align-items:center"></span>
+      <button class="page-btn" type="button" id="nextBtn" aria-label="Page suivante">→</button>
+    </div>
+  </section>
+
+  <!-- Erreur -->
+  <div id="errorBox" class="alert" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="errorText"></span>
+  </div>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

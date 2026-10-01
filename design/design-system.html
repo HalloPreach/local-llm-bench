@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local LLM Bench — Design System</title>
+<meta name="description" content="Design system de Local LLM Bench : tokens, composants UI et maquettes des 3 vues (liste, détail, comparaison).">
+<style>
+/* ============================================================
+   LOCAL LLM BENCH — DESIGN SYSTEM
+   Fichier de référence pour l'UI (Astro + Tailwind).
+   1) Les tokens ci-dessous (CSS custom properties) sont la
+      source de vérité : les mapper 1:1 dans tailwind.config
+      (colors/spacing/borderRadius/boxShadow/fontFamily).
+   2) Les composants sont des classes .cls-* réutilisables.
+   3) Les maquettes de vues sont statiques : aucune donnée
+      n'est réelle — voir bandeau "exemples".
+   Thèmes : light par défaut, dark via [data-theme="dark"].
+   ============================================================ */
+
+/* ---------- 1. DESIGN TOKENS ---------- */
+:root{
+  /* Couleurs — fond / surfaces */
+  --c-bg:            #F6F7F9;
+  --c-surface:       #FFFFFF;
+  --c-surface-2:    #F1F3F6;
+  --c-border:       #E3E7EE;
+  --c-border-strong:#C9D0DB;
+
+  /* Couleurs — texte */
+  --c-text:         #171B23;
+  --c-text-muted:   #5A6472;
+  --c-text-faint:   #8A94A3;
+
+  /* Accent (identité projet) */
+  --c-accent:        #4F46E5;
+  --c-accent-hover:  #4338CA;
+  --c-accent-soft:   #EEF0FE;
+  --c-accent-contrast:#FFFFFF;
+
+  /* Sémantique (statuts schema.json: success / partial / error) */
+  --c-ok:    #1A7F4B;  --c-ok-soft:    #E4F5EC;
+  --c-warn:  #B45309;  --c-warn-soft:  #FDF0DD;
+  --c-err:   #BE3144;  --c-err-soft:   #FBE4E7;
+
+  /* Palette graphique (max 5 séries — 1 couleur par run comparé) */
+  --ch-1:#4F46E5; --ch-2:#0D9488; --ch-3:#D97706; --ch-4:#DB2777; --ch-5:#64748B;
+
+  /* Espacement (base 4px) */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+
+  /* Radius */
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px; --r-pill:999px;
+
+  /* Ombres (douces, portfolio) */
+  --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+  --shadow-md:0 4px 12px rgba(16,24,40,.08);
+  --shadow-lg:0 12px 32px rgba(16,24,40,.14);
+
+  /* Typo */
+  --font-sans:"Inter",-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;
+  --font-mono:"Cascadia Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --text-xs:12px; --text-sm:13px; --text-base:14px; --text-lg:16px;
+  --text-xl:20px; --text-2xl:24px; --text-3xl:32px;
+  --leading-tight:1.25; --leading-base:1.55;
+
+  /* Focus (accessibilité) */
+  --focus-ring:0 0 0 3px color-mix(in srgb, var(--c-accent) 35%, transparent);
+
+  /* Breakpoints (docs — Tailwind gère côté utilitaires) :
+     sm 640 · md 768 · lg 1024 · xl 1280
+     Mobile-first : < 768 = layout 1 colonne + tableaux en cartes. */
+}
+[data-theme="dark"]{
+  --c-bg:            #0B0E14;
+  --c-surface:       #12161F;
+  --c-surface-2:    #1A202C;
+  --c-border:       #262D3B;
+  --c-border-strong:#3A4356;
+  --c-text:          #E8ECF3;
+  --c-text-muted:    #9AA5B5;
+  --c-text-faint:    #67707F;
+  --c-accent:        #818CF8;
+  --c-accent-hover:  #A5B4FC;
+  --c-accent-soft:   #232750;
+  --c-accent-contrast:#0B0E14;
+  --c-ok:    #4ADE80;  --c-ok-soft:    #14351F;
+  --c-warn:  #FBBF24;  --c-warn-soft:  #3A2E10;
+  --c-err:   #F87171;  --c-err-soft:   #3B1519;
+  --ch-1:#818CF8; --ch-2:#2DD4BF; --ch-3:#FBBF24; --ch-4:#F472B6; --ch-5:#94A3B8;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 4px 12px rgba(0,0,0,.45);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.55);
+}
+html[data-theme="light"]{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+
+/* ---------- 2. BASE ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--c-bg); color:var(--c-text);
+  font:400 var(--text-base)/var(--leading-base) var(--font-sans);
+  font-variant-numeric:tabular-nums;
+}
+h1,h2,h3,h4,p,dl,dd,figure{margin:0}
+a{color:var(--c-accent); text-decoration:none}
+a:hover{text-decoration:underline}
+img,svg{display:block; max-width:100%}
+button,input,select{font:inherit; color:inherit}
+:focus-visible{outline:none; box-shadow:var(--focus-ring); border-radius:var(--r-sm)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.container{max-width:1160px; margin-inline:auto; padding-inline:var(--sp-4)}
+.mono{font-family:var(--font-mono)}
+.num{font-variant-numeric:tabular-nums}
+.section{padding-block:var(--sp-7)}
+.section > h2{font-size:var(--text-2xl); line-height:var(--leading-tight); margin-bottom:var(--sp-2)}
+.section > .lede{color:var(--c-text-muted); max-width:60ch; margin-bottom:var(--sp-5)}
+.h-group{font-size:var(--text-lg); font-weight:600; margin:var(--sp-5) 0 var(--sp-3)}
+.demo{display:grid; gap:var(--sp-3)}
+.demo-note{font-size:var(--text-sm); color:var(--c-text-muted); margin-top:var(--sp-2)}
+/* Bandeau "données d'exemple" (règle projet : jamais de fake présenté comme réel) */
+.sample-banner{
+  display:flex; gap:var(--sp-2); align-items:center;
+  padding:var(--sp-2) var(--sp-3); border:1px dashed var(--c-warn);
+  background:var(--c-warn-soft); color:var(--c-warn);
+  border-radius:var(--r-md); font-size:var(--text-sm); font-weight:500;
+  margin-bottom:var(--sp-4);
+}
+.sample-banner svg{flex:none}
+
+/* ---------- 3. PAGE SQUELETTE (nav + header app) ---------- */
+.app-header{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--c-surface) 88%, transparent);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--c-border);
+}
+.app-header .container{display:flex; align-items:center; gap:var(--sp-4); height:56px}
+.brand{font-weight:700; font-size:var(--text-lg); letter-spacing:-.01em}
+.brand .brand-dot{color:var(--c-accent)}
+.app-nav{display:flex; gap:var(--sp-1); margin-left:var(--sp-4)}
+.app-nav a{
+  padding:var(--sp-1) var(--sp-3); border-radius:var(--r-pill);
+  color:var(--c-text-muted); font-size:var(--text-sm); font-weight:500;
+}
+.app-nav a:hover{background:var(--c-surface-2); text-decoration:none}
+.app-nav a[aria-current="page"]{background:var(--c-accent-soft); color:var(--c-accent)}
+.app-header .spacer{flex:1}
+@media (max-width:639px){
+  .app-nav{display:none}
+  .app-header .mobile-nav{display:flex}
+}
+.mobile-nav{display:none; gap:var(--sp-1); margin-left:auto; margin-right:var(--sp-2)}
+.mobile-nav a{padding:var(--sp-1) var(--sp-2); border-radius:var(--r-sm); color:var(--c-text-muted); font-size:var(--text-sm)}
+.mobile-nav a[aria-current="page"]{background:var(--c-accent-soft); color:var(--c-accent)}
+
+/* Sélecteur de thème (switch accessible) */
+.theme-toggle{
+  display:inline-flex; align-items:center; gap:var(--sp-2);
+  border:1px solid var(--c-border); background:var(--c-surface);
+  border-radius:var(--r-pill); padding:var(--sp-1) var(--sp-2);
+  cursor:pointer; font-size:var(--text-sm); font-weight:500;
+}
+.theme-toggle .track{width:34px;height:18px;border-radius:999px;background:var(--c-surface-2);border:1px solid var(--c-border-strong);position:relative}
+.theme-toggle .thumb{position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--c-accent);transition:left .15s}
+.theme-toggle[aria-pressed="true"] .thumb{left:17px}
+
+/* ---------- 4. COMPOSANTS ---------- */
+/* 4.1 Card */
+.card{
+  background:var(--c-surface); border:1px solid var(--c-border);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+}
+.card-pad{padding:var(--sp-4)}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--c-border);
+}
+.card-head h3,.card-head h4{font-size:var(--text-base); font-weight:600}
+.card-head .meta{font-size:var(--text-xs); color:var(--c-text-faint)}
+.card-body{padding:var(--sp-4)}
+
+/* 4.2 Stat card (une métrique) */
+.stat-card{
+  background:var(--c-surface); border:1px solid var(--c-border);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+  padding:var(--sp-4); min-width:0;
+}
+.stat-card .stat-label{
+  font-size:var(--text-xs); font-weight:600; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--c-text-muted);
+}
+.stat-card .stat-value{
+  font-family:var(--font-mono); font-size:var(--text-2xl); font-weight:600;
+  letter-spacing:-.02em; margin-top:var(--sp-1); line-height:var(--leading-tight);
+}
+.stat-card .stat-unit{font-size:var(--text-sm); color:var(--c-text-faint); font-weight:500; margin-left:var(--sp-1)}
+.stat-card .stat-sub{font-size:var(--text-xs); color:var(--c-text-faint); margin-top:var(--sp-1)}
+.stat-grid{display:grid; gap:var(--sp-3); grid-template-columns:repeat(5,1fr)}
+@media (max-width:1023px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:479px){.stat-grid{grid-template-columns:1fr}}
+
+/* 4.3 Badges (statut, runtime, quant, modèle, hardware) */
+.badge{
+  display:inline-flex; align-items:center; gap:var(--sp-1);
+  padding:2px var(--sp-2); border-radius:var(--r-pill);
+  font-size:var(--text-xs); font-weight:500; line-height:1.4;
+  border:1px solid transparent; white-space:nowrap;
+}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.badge--neutral{background:var(--c-surface-2); color:var(--c-text-muted); border-color:var(--c-border)}
+.badge--accent{background:var(--c-accent-soft); color:var(--c-accent)}
+.badge--success{background:var(--c-ok-soft); color:var(--c-ok)}
+.badge--partial{background:var(--c-warn-soft); color:var(--c-warn)}
+.badge--error{background:var(--c-err-soft); color:var(--c-err)}
+.badge--chip{
+  background:var(--c-surface); border-color:var(--c-border);
+  color:var(--c-text); cursor:pointer;
+}
+.badge--chip[aria-pressed="true"]{background:var(--c-accent-soft); border-color:var(--c-accent); color:var(--c-accent)}
+
+/* 4.4 Tableau (dense, entête sticky, colonnes numériques) */
+.table-wrap{overflow-x:auto; border-radius:var(--r-lg)}
+table.cls-table{width:100%; border-collapse:collapse; background:var(--c-surface); font-size:var(--text-sm)}
+.cls-table th,.cls-table td{padding:var(--sp-2) var(--sp-3); text-align:left; border-bottom:1px solid var(--c-border); white-space:nowrap}
+.cls-table thead th{
+  position:sticky; top:0; z-index:1; background:var(--c-surface);
+  font-size:var(--text-xs); font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; color:var(--c-text-muted);
+}
+.cls-table th[aria-sort]::after{content:" ⇅"; color:var(--c-text-faint); font-weight:400}
+.cls-table th[aria-sort="ascending"]::after{content:" ↑"}
+.cls-table th[aria-sort="descending"]::after{content:" ↓"}
+.cls-table tbody tr:hover{background:var(--c-surface-2)}
+.cls-table .num{text-align:right; font-family:var(--font-mono); font-size:var(--text-sm)}
+.cls-table .sub{display:block; font-size:var(--text-xs); color:var(--c-text-faint)}
+.cls-table .best{color:var(--c-accent); font-weight:600}
+@media (max-width:767px){
+  /* Mobile : le tableau se transforme en pile de cartes (voir .run-cards) */
+  .cls-table{display:none}
+}
+/* Version mobile du tableau : cartes */
+.run-cards{display:none}
+.run-cards .run-card{
+  background:var(--c-surface); border:1px solid var(--c-border);
+  border-radius:var(--r-lg); padding:var(--sp-3); margin-bottom:var(--sp-2);
+  box-shadow:var(--shadow-sm);
+}
+.run-cards .run-title{font-weight:600}
+.run-cards .kv{display:flex; justify-content:space-between; gap:var(--sp-2); font-size:var(--text-sm); padding-block:2px}
+.run-cards .kv dt{color:var(--c-text-muted)}
+.run-cards .kv dd{margin:0; font-family:var(--font-mono); font-weight:500}
+@media (max-width:767px){.run-cards{display:block}}
+
+/* 4.5 Filtres (barre) */
+.filter-bar{
+  display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:center;
+  background:var(--c-surface); border:1px solid var(--c-border);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:var(--sp-3);
+}
+.filter-bar .search{flex:1 1 200px; display:flex}
+.cls-field{
+  display:flex; align-items:center; gap:var(--sp-2);
+  background:var(--c-surface); border:1px solid var(--c-border-strong);
+  border-radius:var(--r-md); padding:0 var(--sp-2); height:36px; min-width:0;
+}
+.cls-field:focus-within{box-shadow:var(--focus-ring); border-color:var(--c-accent)}
+.cls-field svg{color:var(--c-text-faint); flex:none}
+.cls-field input,.cls-field select{
+  border:0; background:none; padding:0; height:100%; min-width:0; width:100%;
+  color:var(--c-text); font-size:var(--text-sm);
+}
+.cls-field select{width:auto; min-width:130px; cursor:pointer}
+.cls-field input:focus,.cls-field select:focus{outline:none}
+.cls-field label{font-size:var(--text-xs); font-weight:600; color:var(--c-text-muted); text-transform:uppercase; letter-spacing:.04em; flex:none}
+@media (max-width:767px){
+  .filter-bar{flex-direction:column; align-items:stretch}
+  .cls-field select{flex:1}
+}
+.chip-row{display:flex; flex-wrap:wrap; gap:var(--sp-2)}
+
+/* 4.6 Boutons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
+  height:36px; padding-inline:var(--sp-4); border-radius:var(--r-md);
+  font-size:var(--text-sm); font-weight:600; cursor:pointer;
+  border:1px solid transparent; transition:background .12s, border-color .12s;
+  text-decoration:none;
+}
+.btn:hover{text-decoration:none}
+.btn--primary{background:var(--c-accent); color:var(--c-accent-contrast)}
+.btn--primary:hover{background:var(--c-accent-hover)}
+.btn--ghost{background:var(--c-surface); border-color:var(--c-border-strong); color:var(--c-text)}
+.btn--ghost:hover{background:var(--c-surface-2)}
+.btn--danger{background:var(--c-surface); border-color:var(--c-err); color:var(--c-err)}
+.btn--danger:hover{background:var(--c-err-soft)}
+.btn--sm{height:28px; padding-inline:var(--sp-2); font-size:var(--text-xs); border-radius:var(--r-sm)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+
+/* 4.7 Code / sortie brute / commande */
+.code-block{
+  background:var(--c-surface-2); border:1px solid var(--c-border);
+  border-radius:var(--r-md); padding:var(--sp-3);
+  font-family:var(--font-mono); font-size:var(--text-sm); line-height:1.6;
+  overflow-x:auto; white-space:pre;
+}
+.code-block .cmd{color:var(--c-accent); font-weight:600}
+.kbd{
+  display:inline-block; padding:1px var(--sp-2); border-radius:var(--r-sm);
+  border:1px solid var(--c-border-strong); border-bottom-width:2px;
+  background:var(--c-surface-2); font-family:var(--font-mono);
+  font-size:var(--text-xs); color:var(--c-text-muted);
+}
+
+/* 4.8 États : vide / chargement / erreur */
+.empty-state{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:var(--sp-2); padding:var(--sp-7) var(--sp-4);
+  color:var(--c-text-muted);
+}
+.empty-state .empty-icon{
+  width:48px;height:48px;border-radius:var(--r-pill);
+  display:grid;place-items:center;
+  background:var(--c-surface-2); border:1px solid var(--c-border);
+  color:var(--c-text-faint);
+}
+.empty-state h3{font-size:var(--text-lg); font-weight:600; color:var(--c-text)}
+.empty-state p{max-width:40ch; font-size:var(--text-sm)}
+.skeleton{
+  border-radius:var(--r-md);
+  background:linear-gradient(90deg, var(--c-surface-2) 25%, var(--c-border) 50%, var(--c-surface-2) 75%);
+  background-size:200% 100%; animation:shimmer 1.4s infinite;
+}
+@keyframes shimmer{to{background-position:-200% 0}}
+.skeleton-row{display:flex; gap:var(--sp-2); padding:var(--sp-3) 0}
+.skeleton-row .skeleton{height:14px}
+.alert{
+  display:flex; gap:var(--sp-2); align-items:flex-start;
+  border:1px solid var(--c-err); background:var(--c-err-soft); color:var(--c-err);
+  border-radius:var(--r-md); padding:var(--sp-3); font-size:var(--text-sm);
+}
+.alert svg{flex:none}
+
+/* 4.9 Graphiques (SVG natif, sans lib) */
+.chart{background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:var(--sp-4)}
+.chart h4{font-size:var(--text-sm); font-weight:600; margin-bottom:var(--sp-1)}
+.chart .chart-sub{font-size:var(--text-xs); color:var(--c-text-faint); margin-bottom:var(--sp-3)}
+.chart svg{width:100%; height:auto}
+.chart .grid-line{stroke:var(--c-border); stroke-width:1}
+.chart .axis-label{fill:var(--c-text-faint); font-size:11px; font-family:var(--font-sans)}
+.chart .bar-label{fill:var(--c-text-muted); font-size:11px; font-family:var(--font-mono)}
+.chart .legend{display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-top:var(--sp-3)}
+.chart .legend span{display:inline-flex; align-items:center; gap:var(--sp-1); font-size:var(--text-xs); color:var(--c-text-muted)}
+.chart .legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* 4.10 Sélecteurs de runs (vue comparaison) */
+.select-list{display:grid; gap:var(--sp-2)}
+.select-item{
+  display:flex; align-items:center; gap:var(--sp-3);
+  border:1px solid var(--c-border); background:var(--c-surface);
+  border-radius:var(--r-md); padding:var(--sp-2) var(--sp-3); cursor:pointer;
+  font-size:var(--text-sm);
+}
+.select-item:hover{border-color:var(--c-border-strong)}
+.select-item input{accent-color:var(--c-accent); width:16px; height:16px}
+.select-item .sel-sub{margin-left:auto; color:var(--c-text-faint); font-size:var(--text-xs); font-family:var(--font-mono)}
+
+/* 4.11 Pagination */
+.pager{display:flex; align-items:center; gap:var(--sp-2); justify-content:flex-end; padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--c-border); font-size:var(--text-sm); color:var(--c-text-muted)}
+.pager .page-btn{
+  min-width:28px; height:28px; display:inline-grid; place-items:center;
+  border:1px solid var(--c-border); border-radius:var(--r-sm);
+  background:var(--c-surface); font-size:var(--text-sm); cursor:pointer; padding-inline:var(--sp-1);
+}
+.pager .page-btn[aria-current="true"]{background:var(--c-accent); color:var(--c-accent-contrast); border-color:var(--c-accent)}
+
+/* 4.12 Cadre téléphone (maquette mobile) */
+.phone{
+  width:375px; max-width:100%; margin-inline:auto;
+  border:10px solid var(--c-text); border-radius:44px;
+  background:var(--c-bg); overflow:hidden; box-shadow:var(--shadow-lg);
+}
+.phone .phone-screen{height:640px; overflow-y:auto; scrollbar-width:none}
+.phone .phone-screen::-webkit-scrollbar{display:none}
+.phone-frame-wrap{display:grid; grid-template-columns:1fr auto; gap:var(--sp-5); align-items:start}
+@media (max-width:767px){.phone-frame-wrap{grid-template-columns:1fr}}
+.phone-caption{text-align:center; font-size:var(--text-xs); color:var(--c-text-faint); margin-top:var(--sp-2)}
+
+/* 4.13 Vue détail : grille meta */
+.meta-grid{display:grid; gap:var(--sp-3); grid-template-columns:repeat(4,1fr)}
+.meta-grid .meta-item{background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--r-md); padding:var(--sp-3)}
+.meta-item dt{font-size:var(--text-xs); color:var(--c-text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em}
+.meta-item dd{margin:var(--sp-1) 0 0; font-family:var(--font-mono); font-size:var(--text-sm); font-weight:500}
+@media (max-width:767px){.meta-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* 4.14 Table de comparaison (colonnes = runs) */
+table.cmp-table{width:100%; border-collapse:collapse; background:var(--c-surface); font-size:var(--text-sm)}
+.cmp-table th,.cmp-table td{padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--c-border); text-align:left}
+.cmp-table thead th{background:var(--c-surface-2); font-size:var(--text-xs); text-transform:uppercase; letter-spacing:.04em; color:var(--c-text-muted)}
+.cmp-table thead th .run-head{display:flex; align-items:center; gap:var(--sp-2); font-family:var(--font-sans); text-transform:none; letter-spacing:0; color:var(--c-text)}
+.cmp-table thead th .run-head i{width:10px;height:10px;border-radius:2px;flex:none}
+.cmp-table td.num,.cmp-table th.num{text-align:right; font-family:var(--font-mono)}
+.cmp-table .delta{font-size:var(--text-xs); font-family:var(--font-mono)}
+.cmp-table .delta.up{color:var(--c-ok)} .cmp-table .delta.down{color:var(--c-err)}
+.cmp-wrap{overflow-x:auto; border:1px solid var(--c-border); border-radius:var(--r-lg); background:var(--c-surface); box-shadow:var(--shadow-sm)}
+.cmp-wrap table{min-width:640px}
+
+/* 5. DOCS (page spec elle-même) */
+.token-table{width:100%; border-collapse:collapse; font-size:var(--text-sm)}
+.token-table th,.token-table td{padding:var(--sp-2); border:1px solid var(--c-border); text-align:left; vertical-align:top}
+.token-table th{background:var(--c-surface-2); font-size:var(--text-xs); text-transform:uppercase; letter-spacing:.04em; color:var(--c-text-muted)}
+.token-table code{font-family:var(--font-mono); font-size:var(--text-xs); background:var(--c-surface-2); padding:2px var(--sp-1); border-radius:var(--r-sm); white-space:nowrap}
+.swatch{display:inline-block; width:14px; height:14px; border-radius:3px; vertical-align:-2px; margin-right:var(--sp-1); border:1px solid var(--c-border)}
+footer.spec-footer{border-top:1px solid var(--c-border); padding:var(--sp-5) 0; color:var(--c-text-faint); font-size:var(--text-sm)}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="container">
+    <span class="brand">Local LLM Bench<span class="brand-dot">.</span></span>
+    <nav class="app-nav" aria-label="Sections du design system">
+      <a href="#tokens">Tokens</a>
+      <a href="#composants">Composants</a>
+      <a href="#vue-liste">Vue liste</a>
+      <a href="#vue-detail">Vue détail</a>
+      <a href="#vue-compare">Vue comparaison</a>
+    </nav>
+    <span class="spacer"></span>
+    <nav class="mobile-nav" aria-label="Sections (mobile)">
+      <a href="#tokens">Tokens</a>
+      <a href="#composants">Composants</a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Basculer le thème sombre">
+      <span class="track"><span class="thumb"></span></span>
+      <span id="themeLabel">Thème clair</span>
+    </button>
+  </div>
+</header>
+
+<div class="container" style="padding-top:var(--sp-5)">
+  <h1 style="font-size:var(--text-3xl); line-height:var(--leading-tight); letter-spacing:-.02em">Design system — Local LLM Bench</h1>
+  <p class="lede" style="color:var(--c-text-muted); max-width:64ch; margin-top:var(--sp-2)">
+    Source de vérité du style pour le dashboard : <strong>tokens</strong> (mapper 1:1 dans Tailwind),
+    <strong>composants</strong> réutilisables (cards, tables, filtres, badges, graphiques, états) et
+    <strong>maquettes</strong> des trois vues — liste des runs, détail d'un run, comparaison multi-runs —
+    en desktop et mobile. Les valeurs des maquettes sont des <em>exemples</em>, jamais des données réelles.
+  </p>
+  <p style="font-size:var(--text-sm); color:var(--c-text-muted); margin-top:var(--sp-3)">
+    Accessibilité : contraste AA (4.5:1 texte normal), focus visible partout, <code class="mono">aria-*</code> sur les contrôles,
+    graphiques en SVG avec <code class="mono">role="img"</code> + <code class="mono">aria-label</code>,
+    tables avec <code class="mono">scope</code>, thème sombre persisté en <code class="mono">localStorage</code>.
+  </p>
+</div>
+<section class="section" id="tokens" style="scroll-margin-top:72px">
+  <h2>1 · Design tokens</h2>
+  <p class="lede">Définis en CSS custom properties en haut du fichier (bloc <code class="mono">:root</code>).
+  Côté app, mapper chaque token dans <code class="mono">tailwind.config</code> : couleurs → <code class="mono">theme.colors</code>,
+  espacements → <code class="mono">spacing</code>, radius/ombres → <code class="mono">borderRadius/boxShadow</code>.
+  Le thème sombre ne change que les valeurs des tokens — zéro code à part <code class="mono">[data-theme="dark"]</code>.</p>
+
+  <h3 class="h-group">Couleurs — surfaces &amp; texte</h3>
+  <div class="card" style="overflow:hidden">
+    <table class="token-table">
+      <thead><tr><th>Token</th><th>Valeur (clair)</th><th>Valeur (sombre)</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr><td><code>--c-bg</code></td><td><span class="swatch" style="background:#F6F7F9"></span><code>#F6F7F9</code></td><td><span class="swatch" style="background:#0B0E14"></span><code>#0B0E14</code></td><td>Fond de page</td></tr>
+        <tr><td><code>--c-surface</code></td><td><span class="swatch" style="background:#FFFFFF"></span><code>#FFFFFF</code></td><td><span class="swatch" style="background:#12161F"></span><code>#12161F</code></td><td>Cartes, tableaux, header</td></tr>
+        <tr><td><code>--c-surface-2</code></td><td><span class="swatch" style="background:#F1F3F6"></span><code>#F1F3F6</code></td><td><span class="swatch" style="background:#1A202C"></span><code>#1A202C</code></td><td>Hovers, fonds secondaires, code</td></tr>
+        <tr><td><code>--c-border / -strong</code></td><td><span class="swatch" style="background:#E3E7EE"></span><code>#E3E7EE / #C9D0DB</code></td><td><span class="swatch" style="background:#262D3B"></span><code>#262D3B / #3A4356</code></td><td>Bordures (standard / forte)</td></tr>
+        <tr><td><code>--c-text</code></td><td><span class="swatch" style="background:#171B23"></span><code>#171B23</code></td><td><span class="swatch" style="background:#E8ECF3"></span><code>#E8ECF3</code></td><td>Texte principal (AA sur surface)</td></tr>
+        <tr><td><code>--c-text-muted</code></td><td><span class="swatch" style="background:#5A6472"></span><code>#5A6472</code></td><td><span class="swatch" style="background:#9AA5B5"></span><code>#9AA5B5</code></td><td>Sous-titres, labels</td></tr>
+        <tr><td><code>--c-text-faint</code></td><td><span class="swatch" style="background:#8A94A3"></span><code>#8A94A3</code></td><td><span class="swatch" style="background:#67707F"></span><code>#67707F</code></td><td>Métadonnées (AA seulement sur grand texte/icônes)</td></tr>
+        <tr><td><code>--c-accent / -hover</code></td><td><span class="swatch" style="background:#4F46E5"></span><code>#4F46E5 / #4338CA</code></td><td><span class="swatch" style="background:#818CF8"></span><code>#818CF8 / #A5B4FC</code></td><td>Liens, boutons primary, focus, tri actif</td></tr>
+        <tr><td><code>--c-accent-soft</code></td><td><span class="swatch" style="background:#EEF0FE"></span><code>#EEF0FE</code></td><td><span class="swatch" style="background:#232750"></span><code>#232750</code></td><td>Fond des éléments accentués (nav active, chips)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="h-group">Couleurs sémantiques (statuts du schéma : success / partial / error)</h3>
+  <div class="demo">
+    <span class="badge badge--success"><span class="dot"></span>success</span>
+    <span class="badge badge--partial"><span class="dot"></span>partial</span>
+    <span class="badge badge--error"><span class="dot"></span>error</span>
+    <span class="demo-note">Chaque statut a une couleur + fond <code class="mono">-soft</code> (ex. <code class="mono">--c-ok / --c-ok-soft</code>).
+    Utilisés par les badges de statut, les deltas de comparaison (vert = meilleur) et l'alerte d'erreur.</span>
+  </div>
+
+  <h3 class="h-group">Palette graphique (1 couleur par run comparé — max 5)</h3>
+  <div class="demo" style="align-items:center">
+    <span class="badge badge--neutral"><i class="swatch" style="background:var(--ch-1)"></i>Run A — <code class="mono">--ch-1</code></span>
+    <span class="badge badge--neutral"><i class="swatch" style="background:var(--ch-2)"></i>Run B — <code class="mono">--ch-2</code></span>
+    <span class="badge badge--neutral"><i class="swatch" style="background:var(--ch-3)"></i>Run C — <code class="mono">--ch-3</code></span>
+    <span class="badge badge--neutral"><i class="swatch" style="background:var(--ch-4)"></i>Run D — <code class="mono">--ch-4</code></span>
+    <span class="badge badge--neutral"><i class="swatch" style="background:var(--ch-5)"></i>Run E — <code class="mono">--ch-5</code></span>
+    <span class="demo-note">Barres, lignes et légendes des graphiques. <code class="mono">--ch-1</code> est aussi l'accent (l'indigo).</span>
+  </div>
+
+  <h3 class="h-group">Espacement · radius · ombres</h3>
+  <div class="card" style="overflow:hidden">
+    <table class="token-table">
+      <thead><tr><th>Groupe</th><th>Tokens</th><th>Valeurs</th></tr></thead>
+      <tbody>
+        <tr><td>Espacement</td><td><code>--sp-1…--sp-7</code></td><td>4 / 8 / 12 / 16 / 24 / 32 / 48 px (base 4 px)</td></tr>
+        <tr><td>Radius</td><td><code>--r-sm…--r-xl, --r-pill</code></td><td>6 / 10 / 14 / 20 px · pill = 999 px (badges, nav)</td></tr>
+        <tr><td>Ombes</td><td><code>--shadow-sm / md / lg</code></td><td>Douces ; <code class="mono">lg</code> réservé au cadre téléphone et aux overlays</td></tr>
+        <tr><td>Typo</td><td><code>--font-sans / --font-mono</code></td><td>Inter (fallback système) · Cascadia Code / mono système — chiffres en <code class="mono">tabular-nums</code> partout</td></tr>
+        <tr><td>Échelle texte</td><td><code>--text-xs…--text-3xl</code></td><td>12 / 13 / 14 (base) / 16 / 20 / 24 / 32 px</td></tr>
+        <tr><td>Breakpoints</td><td colspan="2">sm 640 · md 768 · lg 1024 · xl 1280 — mobile-first ; &lt; 768 px : 1 colonne + tableaux en cartes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="section" id="composants" style="scroll-margin-top:72px">
+  <h2>2 · Composants</h2>
+  <p class="lede">Classes <code class="mono">.cls-*</code> / <code class="mono">.card</code> / <code class="mono">.badge</code> du fichier CSS.
+  Chacun est testable tel quel : copier le markup, les tokens font le reste. Les valeurs ci-dessous sont des exemples.</p>
+
+  <h3 class="h-group">2.1 Card</h3>
+  <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card">
+      <div class="card-head"><h3>Carte simple</h3><span class="meta">sans head</span></div>
+      <div class="card-body">Corps de carte : titre, description, actions. Bordure <code class="mono">--r-lg</code>, ombre <code class="mono">--shadow-sm</code>.</div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Run — Llama-3.1-8B-Instruct</h3>
+        <span class="badge badge--success"><span class="dot"></span>success</span>
+      </div>
+      <div class="card-body" style="font-size:var(--text-sm); color:var(--c-text-muted)">
+        llama.cpp b4952 · Q4_K_M · RTX 4090
+        <div class="demo" style="margin-top:var(--sp-3)">
+          <button class="btn btn--ghost btn--sm" type="button">Ouvrir</button>
+          <button class="btn btn--ghost btn--sm" type="button">Comparer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="h-group">2.2 Stat cards (5 métriques clés du schéma)</h3>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Gen tok/s</div>
+      <div class="stat-value num">52.4<span class="stat-unit">t/s</span></div>
+      <div class="stat-sub">generation_tok_s</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Prompt tok/s</div>
+      <div class="stat-value num">2 410<span class="stat-unit">t/s</span></div>
+      <div class="stat-sub">prompt_processing_tok_s</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">TTFT</div>
+      <div class="stat-value num">0.62<span class="stat-unit">s</span></div>
+      <div class="stat-sub">ttft_s</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">VRAM pic</div>
+      <div class="stat-value num">7.1<span class="stat-unit">GB</span></div>
+      <div class="stat-sub">vram_peak_gb / 24 GB</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Durée</div>
+      <div class="stat-value num">2:19<span class="stat-unit">min</span></div>
+      <div class="stat-sub">duration_s = 138.7 s</div>
+    </div>
+  </div>
+
+  <h3 class="h-group">2.3 Badges &amp; chips filtrantes</h3>
+  <div class="demo" style="align-items:flex-start">
+    <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
+      <span class="badge badge--neutral"><span class="dot"></span>llama.cpp</span>
+      <span class="badge badge--neutral"><span class="dot"></span>NInfer</span>
+      <span class="badge badge--neutral"><span class="dot"></span>SGLang</span>
+      <span class="badge badge--accent">Q4_K_M</span>
+      <span class="badge badge--accent">RTX 4090</span>
+      <span class="badge badge--success"><span class="dot"></span>success</span>
+      <span class="badge badge--partial"><span class="dot"></span>partial</span>
+      <span class="badge badge--error"><span class="dot"></span>error</span>
+    </div>
+    <p class="demo-note">Badges statuts = couleurs sémantiques. Chips filtrantes (<code class="mono">.badge--chip</code>) :
+    <code class="mono">aria-pressed</code> = état actif (indigo soft). Filtres possibles : model, runtime, quantization, hardware.gpu.</p>
+  </div>
+
+  <h3 class="h-group">2.4 Boutons</h3>
+  <div class="demo" style="align-items:center">
+    <button class="btn btn--primary" type="button">+ Nouveau benchmark</button>
+    <button class="btn btn--ghost" type="button">Exporter JSON</button>
+    <button class="btn btn--danger" type="button">Supprimer</button>
+    <button class="btn btn--ghost btn--sm" type="button" disabled>Désactivé</button>
+    <p class="demo-note">Hauteur 36 px (sm 28 px), radius <code class="mono">--r-md</code>. Primary = accent.</p>
+  </div>
+
+  <h3 class="h-group">2.5 Tableau de runs (desktop) + cartes (mobile)</h3>
+  <div class="card" style="overflow:hidden">
+    <div class="table-wrap">
+      <table class="cls-table">
+        <caption class="sr-only">Liste des runs de benchmarks, triable par colonne</caption>
+        <thead>
+          <tr>
+            <th scope="col">Modèle</th>
+            <th scope="col">Runtime</th>
+            <th scope="col">Quant</th>
+            <th scope="col">GPU</th>
+            <th scope="col" aria-sort="descending">Gen <span class="sr-only">(tri actif, décroissant)</span></th>
+            <th scope="col">Prompt</th>
+            <th scope="col">TTFT</th>
+            <th scope="col">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Llama-3.1-8B-Instruct<span class="sub">8B · llama</span></td>
+            <td>llama.cpp</td>
+            <td>Q4_K_M</td>
+            <td>RTX 4090</td>
+            <td class="num best">52.4</td>
+            <td class="num">2 410</td>
+            <td class="num">0.62</td>
+            <td><span class="badge badge--success"><span class="dot"></span>success</span></td>
+          </tr>
+          <tr>
+            <td>Llama-3.1-8B-Instruct<span class="sub">8B · llama</span></td>
+            <td>SGLang</td>
+            <td>Q8_0</td>
+            <td>RTX 4090</td>
+            <td class="num">47.1</td>
+            <td class="num">1 980</td>
+            <td class="num">0.84</td>
+            <td><span class="badge badge--success"><span class="dot"></span>success</span></td>
+          </tr>
+          <tr>
+            <td>Mistral-7B-Instruct<span class="sub">7B · mistral</span></td>
+            <td>NInfer</td>
+            <td>FP16</td>
+            <td>RTX 4090</td>
+            <td class="num">38.9</td>
+            <td class="num">—</td>
+            <td class="num">1.02</td>
+            <td><span class="badge badge--partial"><span class="dot"></span>partial</span></td>
+          </tr>
+          <tr>
+            <td>Qwen2.5-14B-Instruct<span class="sub">14B · qwen</span></td>
+            <td>llama.cpp</td>
+            <td>Q5_K_M</td>
+            <td>RTX 3060 12GB</td>
+            <td class="num">12.3</td>
+            <td class="num">640</td>
+            <td class="num">3.4</td>
+            <td><span class="badge badge--error"><span class="dot"></span>error</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Version mobile : pile de cartes (affichée < 768 px) -->
+    <div class="run-cards" aria-label="Liste des runs (version mobile)">
+      <div class="run-card">
+        <div class="run-title">Llama-3.1-8B-Instruct · llama.cpp · Q4_K_M</div>
+        <span class="badge badge--success" style="margin-top:var(--sp-1)"><span class="dot"></span>success</span>
+        <dl style="margin-top:var(--sp-2)">
+          <div class="kv"><dt>Gen</dt><dd class="best">52.4 t/s</dd></div>
+          <div class="kv"><dt>Prompt</dt><dd>2 410 t/s</dd></div>
+          <div class="kv"><dt>TTFT</dt><dd>0.62 s</dd></div>
+          <div class="kv"><dt>GPU</dt><dd>RTX 4090</dd></div>
+        </dl>
+      </div>
+      <div class="run-card">
+        <div class="run-title">Mistral-7B-Instruct · NInfer · FP16</div>
+        <span class="badge badge--partial" style="margin-top:var(--sp-1)"><span class="dot"></span>partial</span>
+        <dl style="margin-top:var(--sp-2)">
+          <div class="kv"><dt>Gen</dt><dd>38.9 t/s</dd></div>
+          <div class="kv"><dt>Prompt</dt><dd>—</dd></div>
+          <div class="kv"><dt>TTFT</dt><dd>1.02 s</dd></div>
+          <div class="kv"><dt>GPU</dt><dd>RTX 4090</dd></div>
+        </dl>
+      </div>
+    </div>
+    <div class="pager">
+      <span>1–4 sur 23</span>
+      <button class="page-btn" type="button" aria-label="Page précédente">←</button>
+      <button class="page-btn" type="button" aria-current="true">1</button>
+      <button class="page-btn" type="button">2</button>
+      <button class="page-btn" type="button">…</button>
+      <button class="page-btn" type="button">6</button>
+      <button class="page-btn" type="button" aria-label="Page suivante">→</button>
+    </div>
+  </div>
+  <p class="demo-note">Desktop : tableau dense, entêtes sticky, tri via <code class="mono">aria-sort</code>, colonnes numériques droites.
+  Mobile (&lt; 768 px) : chaque ligne devient une carte — aucune table n'est jamais scrollée horizontalement sur téléphone.
+  « — » = métrique null (run partial/error), jamais de 0 factice.</p>
+
+  <h3 class="h-group">2.6 Barre de filtres + recherche</h3>
+  <div class="filter-bar" role="search">
+    <div class="cls-field">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <label class="sr-only" for="f-search">Rechercher</label>
+      <input id="f-search" type="search" placeholder="Rechercher un modèle, une quant, un GPU…">
+    </div>
+    <div class="cls-field">
+      <label for="f-model">Modèle</label>
+      <select id="f-model"><option>Tous</option><option>Llama-3.1-8B</option><option>Mistral-7B</option><option>Qwen2.5-14B</option></select>
+    </div>
+    <div class="cls-field">
+      <label for="f-runtime">Runtime</label>
+      <select id="f-runtime"><option>Tous</option><option>llama.cpp</option><option>NInfer</option><option>SGLang</option></select>
+    </div>
+    <div class="cls-field">
+      <label for="f-hw">Matériel</label>
+      <select id="f-hw"><option>Tous</option><option>RTX 4090</option><option>RTX 3060</option><option>CPU</option></select>
+    </div>
+  </div>
+  <p class="demo-note">Sous la barre, les chips actives (<code class="mono">.badge--chip</code>) résument les filtres appliqués — chaque chip est retirable.
+  Mobile : la barre passe en 1 colonne, selects pleine largeur.</p>
+
+  <h3 class="h-group">2.7 Sortie brute &amp; commande reproductible</h3>
+  <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    <div>
+      <p class="demo-note" style="margin:0 0 var(--sp-2)">Commande exacte du run (copiable) :</p>
+      <div class="code-block"><span class="cmd">$</span> llama-bench -m Qwen2.5-14B-Instruct-Q5_K_M.gguf \
+  -ngl 99 -c 8192 -n 256 \
+  --prompt "…" <span style="color:var(--c-text-faint)">(bouton copier = .btn--ghost .btn--sm)</span></div>
+    </div>
+    <div>
+      <p class="demo-note" style="margin:0 0 var(--sp-2)">Raw output (scrollable, mono) :</p>
+      <div class="code-block" style="max-height:120px; overflow:auto">llama-bench: model  = Qwen2.5-14B-Instruct-Q5_K_M
+llama-bench: test     = prompt eval  n = 1024 tokens
+llama-bench: prompt eval  time = 1600.2 ms  -> 640.0 t/s
+llama-bench: test     = generation  n = 256 tokens
+llama-bench: gen       time =   20810.4 ms  ->   12.3 t/s</div>
+    </div>
+  </div>
+
+  <h3 class="h-group">2.8 États : vide · chargement · erreur</h3>
+  <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card">
+      <div class="empty-state">
+        <span class="empty-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <h3>Aucun run trouvé</h3>
+        <p>Aucun benchmark ne correspond à ces filtres. Essayer d'élargir la recherche.</p>
+        <button class="btn btn--ghost btn--sm" type="button">Réinitialiser les filtres</button>
+      </div>
+    </div>
+    <div class="card card-pad">
+      <p class="demo-note" style="margin-bottom:var(--sp-3)">Chargement (skeleton) :</p>
+      <div class="skeleton-row" aria-hidden="true"><div class="skeleton" style="flex:2"></div><div class="skeleton" style="flex:1"></div><div class="skeleton" style="flex:1"></div></div>
+      <div class="skeleton-row" aria-hidden="true"><div class="skeleton" style="flex:2"></div><div class="skeleton" style="flex:1"></div><div class="skeleton" style="flex:1"></div></div>
+      <div class="skeleton-row" aria-hidden="true"><div class="skeleton" style="flex:2"></div><div class="skeleton" style="flex:1"></div><div class="skeleton" style="flex:1"></div></div>
+      <span class="sr-only" role="status">Chargement des runs…</span>
+    </div>
+    <div class="card card-pad">
+      <p class="demo-note" style="margin-bottom:var(--sp-3)">Erreur (API) :</p>
+      <div class="alert" role="alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div><strong>Impossible de charger les runs.</strong> L'API a renvoyé une erreur 500. Réessayer dans un instant.</div>
+        <button class="btn btn--danger btn--sm" type="button" style="margin-left:auto">Réessayer</button>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="h-group">2.9 Graphiques (SVG natif — zéro lib)</h3>
+  <p class="demo-note" style="max-width:70ch">Principe : les graphiques sont dessinés en SVG inline par l'app (pas de dépendance chart).
+  La règle visuelle est fixée ici : barres arrondies <code class="mono">--r-sm</code>, 1 couleur de <code class="mono">--ch-*</code> par run,
+  axe Y discret, libellés en <code class="mono">mono</code> 11 px, grille = <code class="mono">--c-border</code>. Chaque SVG porte <code class="mono">role="img"</code> + <code class="mono">aria-label</code>.</p>
+
+  <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-top:var(--sp-3)">
+    <!-- Barres : gen tok/s par run -->
+    <figure class="chart" style="margin:0">
+      <h4>Gen tok/s par run</h4>
+      <p class="chart-sub">Unité : tokens/s — plus haut = meilleur</p>
+      <svg viewBox="0 0 320 180" role="img" aria-label="Barres : Llama-3.1-8B llama.cpp 52,4 t/s ; SGLang 47,1 ; NInfer 38,9 ; Qwen2.5-14B 12,3">
+        <line class="grid-line" x1="40" y1="10" x2="40" y2="150"/>
+        <line class="grid-line" x1="40" y1="150" x2="310" y2="150"/>
+        <line class="grid-line" x1="40" y1="75" x2="310" y2="75" stroke-dasharray="3 4"/>
+        <text class="axis-label" x="34" y="14" text-anchor="end">60</text>
+        <text class="axis-label" x="34" y="79" text-anchor="end">30</text>
+        <text class="axis-label" x="34" y="154" text-anchor="end">0</text>
+        <rect x="60" y="47" width="40" height="103" rx="4" style="fill:var(--ch-1)"/>
+        <rect x="125" y="57" width="40" height="93" rx="4" style="fill:var(--ch-2)"/>
+        <rect x="190" y="73" width="40" height="77" rx="4" style="fill:var(--ch-3)"/>
+        <rect x="255" y="125" width="40" height="25" rx="4" style="fill:var(--ch-4)"/>
+        <text class="bar-label" x="80" y="41" text-anchor="middle">52.4</text>
+        <text class="bar-label" x="145" y="51" text-anchor="middle">47.1</text>
+        <text class="bar-label" x="210" y="67" text-anchor="middle">38.9</text>
+        <text class="bar-label" x="275" y="119" text-anchor="middle">12.3</text>
+        <text class="axis-label" x="80" y="168" text-anchor="middle">llama.cpp</text>
+        <text class="axis-label" x="145" y="168" text-anchor="middle">SGLang</text>
+        <text class="axis-label" x="210" y="168" text-anchor="middle">NInfer</text>
+        <text class="axis-label" x="275" y="168" text-anchor="middle">llama.cpp</text>
+      </svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--ch-1)"></i>Llama-3.1-8B</span>
+        <span><i style="background:var(--ch-2)"></i>Llama-3.1-8B (SGLang)</span>
+        <span><i style="background:var(--ch-3)"></i>Mistral-7B</span>
+        <span><i style="background:var(--ch-4)"></i>Qwen2.5-14B</span>
+      </div>
+    </figure>
+
+    <!-- Nuage de points : compromis vitesse / VRAM -->
+    <figure class="chart" style="margin:0">
+      <h4>Compromis gen tok/s × VRAM</h4>
+      <p class="chart-sub">Chaque point = 1 run ; taille = contexte</p>
+      <svg viewBox="0 0 320 180" role="img" aria-label="Nuage de points : 4 runs répartis en tok/s et VRAM, montrant le compromis vitesse et mémoire">
+        <line class="grid-line" x1="40" y1="10" x2="40" y2="150"/>
+        <line class="grid-line" x1="40" y1="150" x2="310" y2="150"/>
+        <line class="grid-line" x1="40" y1="80" x2="310" y2="80" stroke-dasharray="3 4"/>
+        <line class="grid-line" x1="175" y1="10" x2="175" y2="150" stroke-dasharray="3 4"/>
+        <text class="axis-label" x="34" y="14" text-anchor="end">60</text>
+        <text class="axis-label" x="34" y="84" text-anchor="end">30</text>
+        <text class="axis-label" x="34" y="154" text-anchor="end">0</text>
+        <text class="axis-label" x="46" y="168">0</text>
+        <text class="axis-label" x="175" y="168" text-anchor="middle">12 GB</text>
+        <text class="axis-label" x="304" y="168" text-anchor="end">24 GB</text>
+        <text class="axis-label" x="175" y="178" text-anchor="middle">VRAM pic (GB)</text>
+        <circle cx="180" cy="52" r="9" style="fill:var(--ch-1)" fill-opacity=".85"/>
+        <circle cx="205" cy="62" r="11" style="fill:var(--ch-2)" fill-opacity=".85"/>
+        <circle cx="235" cy="76" r="8" style="fill:var(--ch-3)" fill-opacity=".85"/>
+        <circle cx="90" cy="128" r="7" style="fill:var(--ch-4)" fill-opacity=".85"/>
+      </svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--ch-1)"></i>llama.cpp</span>
+        <span><i style="background:var(--ch-2)"></i>SGLang</span>
+        <span><i style="background:var(--ch-3)"></i>NInfer</span>
+        <span><i style="background:var(--ch-4)"></i>llama.cpp (RTX 3060)</span>
+      </div>
+    </figure>
+
+    <!-- Lignes : TTFT sur 3 runtimes -->
+    <figure class="chart" style="margin:0">
+      <h4>TTFT par contexte</h4>
+      <p class="chart-sub">Unité : secondes — plus bas = meilleur</p>
+      <svg viewBox="0 0 320 180" role="img" aria-label="Courbes du TTFT selon la taille de contexte pour 3 runtimes ; le TTFT augmente avec le contexte">
+        <line class="grid-line" x1="40" y1="10" x2="40" y2="150"/>
+        <line class="grid-line" x1="40" y1="150" x2="310" y2="150"/>
+        <line class="grid-line" x1="40" y1="80" x2="310" y2="80" stroke-dasharray="3 4"/>
+        <text class="axis-label" x="34" y="14" text-anchor="end">4s</text>
+        <text class="axis-label" x="34" y="84" text-anchor="end">2s</text>
+        <text class="axis-label" x="34" y="154" text-anchor="end">0</text>
+        <text class="axis-label" x="46" y="168">1K</text>
+        <text class="axis-label" x="125" y="168" text-anchor="middle">4K</text>
+        <text class="axis-label" x="215" y="168" text-anchor="middle">8K</text>
+        <text class="axis-label" x="304" y="168" text-anchor="end">16K</text>
+        <polyline fill="none" stroke-width="2" style="stroke:var(--ch-1)" points="50,52 130,68 220,96 300,124"/>
+        <polyline fill="none" stroke-width="2" style="stroke:var(--ch-2)" points="50,64 130,84 220,112 300,138"/>
+        <polyline fill="none" stroke-width="2" stroke-dasharray="4 3" style="stroke:var(--ch-3)" points="50,76 130,96 220,124 300,146"/>
+        <circle cx="50" cy="52" r="3" style="fill:var(--ch-1)"/><circle cx="300" cy="124" r="3" style="fill:var(--ch-1)"/>
+        <circle cx="50" cy="64" r="3" style="fill:var(--ch-2)"/><circle cx="300" cy="138" r="3" style="fill:var(--ch-2)"/>
+      </svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--ch-1)"></i>llama.cpp</span>
+        <span><i style="background:var(--ch-2)"></i>SGLang</span>
+        <span><i style="background:var(--ch-3)"></i>NInfer</span>
+      </div>
+    </figure>
+  </div>
+</section>
+<section class="section" id="vue-liste" style="scroll-margin-top:72px">
+  <h2>3 · Maquette — Vue liste des benchmarks</h2>
+  <p class="lede">Page d'accueil du dashboard : recherche, filtres, tri, pagination.
+  Toutes les valeurs ci-dessous sont des <strong>exemples</strong> de présentation — jamais de donnée fictive présentée comme réelle.</p>
+  <div class="sample-banner" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Maquette : données d'exemple (valeurs fictives de présentation). En production, cette vue consomme <code class="mono">GET /benchmarks</code>.
+  </div>
+
+  <h3 class="h-group">Desktop (≥ 768 px)</h3>
+  <div class="card" style="overflow:hidden">
+    <!-- Filtres (composant 2.6) -->
+    <div class="card-pad" style="background:var(--c-surface-2)">
+      <div class="filter-bar" style="box-shadow:none">
+        <div class="cls-field" style="flex:1 1 220px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" placeholder="Rechercher (modèle, quant, GPU)…" aria-label="Rechercher">
+        </div>
+        <div class="cls-field"><label for="v1-model">Modèle</label><select id="v1-model"><option>Tous (3)</option></select></div>
+        <div class="cls-field"><label for="v1-runtime">Runtime</label><select id="v1-runtime"><option>Tous (3)</option></select></div>
+        <div class="cls-field"><label for="v1-hw">Matériel</label><select id="v1-hw"><option>Tous (2)</option></select></div>
+        <button class="btn btn--ghost btn--sm" type="button">Réinitialiser</button>
+      </div>
+      <div class="chip-row" style="margin-top:var(--sp-2)">
+        <span class="badge badge--chip" aria-pressed="true">runtime: llama.cpp ×</span>
+        <span class="badge badge--chip" aria-pressed="false">quant: Q4_K_M</span>
+        <span class="badge badge--chip" aria-pressed="false">gpu: RTX 4090</span>
+      </div>
+    </div>
+    <!-- Résumé (composant 2.2) -->
+    <div class="card-pad">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Runs</div><div class="stat-value num">23</div><div class="stat-sub">4 this month</div></div>
+        <div class="stat-card"><div class="stat-label">Meilleur gen</div><div class="stat-value num">52.4<span class="stat-unit">t/s</span></div><div class="stat-sub">llama.cpp · Q4_K_M</div></div>
+        <div class="stat-card"><div class="stat-label">Taux de succès</div><div class="stat-value num">87<span class="stat-unit">%</span></div><div class="stat-sub">20 / 23 success</div></div>
+        <div class="stat-card"><div class="stat-label">Modèles testés</div><div class="stat-value num">4</div><div class="stat-sub">3 runtimes</div></div>
+        <div class="stat-card"><div class="stat-label">VRAM max</div><div class="stat-value num">24<span class="stat-unit">GB</span></div><div class="stat-sub">RTX 4090</div></div>
+      </div>
+    </div>
+    <!-- Tableau (composant 2.5, version desktop) -->
+    <div class="table-wrap">
+      <table class="cls-table">
+        <caption class="sr-only">Runs de benchmarks filtrés et triables</caption>
+        <thead>
+          <tr>
+            <th scope="col">Modèle</th>
+            <th scope="col">Runtime</th>
+            <th scope="col">Quant</th>
+            <th scope="col">GPU</th>
+            <th scope="col" aria-sort="descending">Gen t/s</th>
+            <th scope="col">TTFT</th>
+            <th scope="col">VRAM</th>
+            <th scope="col">Date</th>
+            <th scope="col">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="#vue-detail">Llama-3.1-8B-Instruct</a><span class="sub">8B</span></td>
+            <td>llama.cpp</td>
+            <td>Q4_K_M</td>
+            <td>RTX 4090</td>
+            <td class="num best">52.4</td>
+            <td class="num">0.62</td>
+            <td class="num">7.1</td>
+            <td class="num">01/10</td>
+            <td><span class="badge badge--success"><span class="dot"></span>success</span></td>
+          </tr>
+          <tr>
+            <td><a href="#vue-detail">Llama-3.1-8B-Instruct</a><span class="sub">8B</span></td>
+            <td>SGLang</td>
+            <td>Q8_0</td>
+            <td>RTX 4090</td>
+            <td class="num">47.1</td>
+            <td class="num">0.84</td>
+            <td class="num">9.4</td>
+            <td class="num">01/10</td>
+            <td><span class="badge badge--success"><span class="dot"></span>success</span></td>
+          </tr>
+          <tr>
+            <td><a href="#vue-detail">Mistral-7B-Instruct</a><span class="sub">7B</span></td>
+            <td>NInfer</td>
+            <td>FP16</td>
+            <td>RTX 4090</td>
+            <td class="num">38.9</td>
+            <td class="num">1.02</td>
+            <td class="num">14.2</td>
+            <td class="num">28/09</td>
+            <td><span class="badge badge--partial"><span class="dot"></span>partial</span></td>
+          </tr>
+          <tr>
+            <td><a href="#vue-detail">Qwen2.5-14B-Instruct</a><span class="sub">14B</span></td>
+            <td>llama.cpp</td>
+            <td>Q5_K_M</td>
+            <td>RTX 3060</td>
+            <td class="num">12.3</td>
+            <td class="num">3.4</td>
+            <td class="num">11.8</td>
+            <td class="num">25/09</td>
+            <td><span class="badge badge--error"><span class="dot"></span>error</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination (composant 2.5) -->
+    <div class="pager">
+      <span>1–4 sur 23</span>
+      <button class="page-btn" type="button" aria-label="Page précédente">←</button>
+      <button class="page-btn" type="button" aria-current="true">1</button>
+      <button class="page-btn" type="button">2</button>
+      <button class="page-btn" type="button">…</button>
+      <button class="page-btn" type="button">6</button>
+      <button class="page-btn" type="button" aria-label="Page suivante">→</button>
+    </div>
+  </div>
+  <p class="demo-note">Le nom de run est le seul lien de la ligne (toute la ligne reste cliquable).
+  « Meilleur » de chaque colonne numérique = accent (<code class="mono">.best</code>) quand le tri est actif.
+  Tri par colonne via <code class="mono">aria-sort</code> sur le <code class="mono">&lt;th&gt;</code>.</p>
+
+  <h3 class="h-group">Mobile (cadre 375 px — composant <code class="mono">.phone</code>)</h3>
+  <div class="phone-frame-wrap">
+    <div>
+      <p class="demo-note" style="max-width:40ch">Sur mobile : filtres en 1 colonne, chips scrollables,
+      les lignes du tableau deviennent des <strong>cartes</strong> (composant 2.5), pagination centrée.
+      Aucune table n'est jamais scrollée horizontalement.</p>
+    </div>
+    <div>
+      <div class="phone" role="img" aria-label="Maquette mobile de la vue liste : filtres, puis pile de cartes de runs">
+        <div class="phone-screen">
+          <div style="padding:var(--sp-3)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3)">
+              <span class="brand" style="font-size:var(--text-base)">Local LLM Bench<span class="brand-dot">.</span></span>
+              <span class="badge badge--accent" style="font-size:11px">23 runs</span>
+            </div>
+            <div class="filter-bar" style="flex-direction:column;align-items:stretch">
+              <div class="cls-field">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <input type="search" placeholder="Rechercher…" aria-label="Rechercher" style="font-size:var(--text-sm)">
+              </div>
+              <div class="cls-field" style="flex-direction:column;align-items:stretch;height:auto;padding:var(--sp-2)">
+                <label for="vm-model" style="font-size:11px">Modèle</label>
+                <select id="vm-model" style="width:100%;height:32px"><option>Tous</option></select>
+              </div>
+              <div class="cls-field" style="flex-direction:column;align-items:stretch;height:auto;padding:var(--sp-2)">
+                <label for="vm-runtime" style="font-size:11px">Runtime</label>
+                <select id="vm-runtime" style="width:100%;height:32px"><option>Tous</option></select>
+              </div>
+            </div>
+            <div class="chip-row" style="margin-top:var(--sp-2)">
+              <span class="badge badge--chip" aria-pressed="true">llama.cpp ×</span>
+              <span class="badge badge--chip" aria-pressed="false">Q4_K_M</span>
+              <span class="badge badge--chip" aria-pressed="false">RTX 4090</span>
+            </div>
+            <div class="stat-grid" style="grid-template-columns:repeat(2,1fr); margin-top:var(--sp-3)">
+              <div class="stat-card" style="padding:var(--sp-2)"><div class="stat-label" style="font-size:11px">Runs</div><div class="stat-value num" style="font-size:var(--text-xl)">23</div></div>
+              <div class="stat-card" style="padding:var(--sp-2)"><div class="stat-label" style="font-size:11px">Meilleur gen</div><div class="stat-value num" style="font-size:var(--text-xl)">52.4<span class="stat-unit">t/s</span></div></div>
+            </div>
+            <div class="run-cards" style="margin-top:var(--sp-3)">
+              <div class="run-card">
+                <div class="run-title" style="font-size:var(--text-sm)">Llama-3.1-8B-Instruct <span class="mono" style="color:var(--c-text-faint)">· llama.cpp</span></div>
+                <span class="badge badge--success" style="margin-top:2px"><span class="dot"></span>success</span>
+                <dl style="margin-top:var(--sp-2)">
+                  <div class="kv"><dt>Gen</dt><dd class="best">52.4 t/s</dd></div>
+                  <div class="kv"><dt>TTFT</dt><dd>0.62 s</dd></div>
+                  <div class="kv"><dt>VRAM</dt><dd>7.1 GB</dd></div>
+                </dl>
+              </div>
+              <div class="run-card">
+                <div class="run-title" style="font-size:var(--text-sm)">Mistral-7B-Instruct <span class="mono" style="color:var(--c-text-faint)">· NInfer</span></div>
+                <span class="badge badge--partial" style="margin-top:2px"><span class="dot"></span>partial</span>
+                <dl style="margin-top:var(--sp-2)">
+                  <div class="kv"><dt>Gen</dt><dd>38.9 t/s</dd></div>
+                  <div class="kv"><dt>TTFT</dt><dd>1.02 s</dd></div>
+                  <div class="kv"><dt>VRAM</dt><dd>14.2 GB</dd></div>
+                </dl>
+              </div>
+            </div>
+            <div class="pager" style="justify-content:center;border-top:0">
+              <span>1–2 sur 23</span>
+              <button class="page-btn" type="button" aria-label="Page suivante">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="phone-caption">iPhone 14 (375 × 647)</p>
+    </div>
+  </div>
+</section>
+<section class="section" id="vue-detail" style="scroll-margin-top:72px">
+  <h2>4 · Maquette — Vue détail d'un run</h2>
+  <p class="lede">Une page par run : identification complète, métriques en stat cards, graphiques de détail,
+  commande exacte et raw output pour la reproductibilité. Consomme <code class="mono">GET /benchmarks/{id}</code>.</p>
+  <div class="sample-banner" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Exemple : le run « run-2026-10-01-llama31-8b-q4km-rtx4090 » — valeurs d'illustration, pas une mesure réelle.
+  </div>
+
+  <h3 class="h-group">Desktop (≥ 768 px)</h3>
+  <div class="card" style="overflow:hidden">
+    <div class="card-pad">
+      <p style="font-size:var(--text-xs); color:var(--c-text-faint)">
+        <a href="#vue-liste">← Runs</a> / run-2026-10-01-…
+      </p>
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-3); flex-wrap:wrap; margin-top:var(--sp-1)">
+        <div>
+          <h3 style="font-size:var(--text-xl); font-weight:600; letter-spacing:-.01em">Llama-3.1-8B-Instruct <span class="badge badge--accent" style="vertical-align:2px">8B</span></h3>
+          <p class="demo-note" style="margin-top:var(--sp-1)">
+            01/10/2026 14:30 UTC · <span class="mono">run-2026-10-01-llama31-8b-q4km-rtx4090</span>
+          </p>
+          <div class="demo" style="margin-top:var(--sp-2)">
+            <span class="badge badge--neutral"><span class="dot"></span>llama.cpp b4952</span>
+            <span class="badge badge--accent">Q4_K_M</span>
+            <span class="badge badge--accent">RTX 4090 · 24 GB</span>
+            <span class="badge badge--success"><span class="dot"></span>success</span>
+          </div>
+        </div>
+        <div class="demo">
+          <button class="btn btn--ghost" type="button">Copier JSON</button>
+          <button class="btn btn--danger" type="button">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-pad" style="border-top:1px solid var(--c-border)">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Gen tok/s</div><div class="stat-value num">52.4<span class="stat-unit">t/s</span></div><div class="stat-sub">256 tokens générés</div></div>
+        <div class="stat-card"><div class="stat-label">Prompt tok/s</div><div class="stat-value num">2 410<span class="stat-unit">t/s</span></div><div class="stat-sub">1 024 tokens</div></div>
+        <div class="stat-card"><div class="stat-label">TTFT</div><div class="stat-value num">0.62<span class="stat-unit">s</span></div><div class="stat-sub">temps 1er token</div></div>
+        <div class="stat-card"><div class="stat-label">VRAM pic</div><div class="stat-value num">7.1<span class="stat-unit">GB</span></div><div class="stat-sub">/ 24 GB (29 %)</div></div>
+        <div class="stat-card"><div class="stat-label">Durée</div><div class="stat-value num">2:19<span class="stat-unit">min</span></div><div class="stat-sub">duration_s = 138.7</div></div>
+      </div>
+    </div>
+
+    <div class="card-pad" style="border-top:1px solid var(--c-border); padding-top:var(--sp-3)">
+      <h3 style="font-size:var(--text-base); font-weight:600; margin-bottom:var(--sp-2)">Configuration &amp; matériel</h3>
+      <dl class="meta-grid">
+        <div class="meta-item"><dt>Contexte</dt><dd>4 096 tokens</dd></div>
+        <div class="meta-item"><dt>Prompt</dt><dd>1 024 tokens</dd></div>
+        <div class="meta-item"><dt>Générés</dt><dd>256 tokens</dd></div>
+        <div class="meta-item"><dt>GPU</dt><dd>NVIDIA RTX 4090</dd></div>
+        <div class="meta-item"><dt>CPU</dt><dd>Ryzen 9 7950X</dd></div>
+        <div class="meta-item"><dt>RAM</dt><dd>64 GB</dd></div>
+        <div class="meta-item"><dt>OS</dt><dd>Windows 11</dd></div>
+        <div class="meta-item"><dt>Arch</dt><dd>llama</dd></div>
+      </dl>
+    </div>
+
+    <div class="card-pad" style="border-top:1px solid var(--c-border); padding-top:var(--sp-3)">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-2)">
+        <h3 style="font-size:var(--text-base); font-weight:600">Commande exacte (reproductible)</h3>
+        <button class="btn btn--ghost btn--sm" type="button">Copier</button>
+      </div>
+      <div class="code-block"><span class="cmd">$</span> llama-bench -m Llama-3.1-8B-Instruct-Q4_K_M.gguf \
+  -ngl 99 -c 4096 -p 1024 -n 256</div>
+    </div>
+
+    <div class="card-pad" style="border-top:1px solid var(--c-border); padding-top:var(--sp-3)">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-2)">
+        <h3 style="font-size:var(--text-base); font-weight:600">Sortie brute</h3>
+        <span class="demo-note" style="margin:0">20 lignes · <span class="mono">.code-block</span> scrollable</span>
+      </div>
+      <div class="code-block" style="max-height:150px; overflow:auto">llama-bench: model  = Llama-3.1-8B-Instruct-Q4_K_M
+llama-bench: test     = prompt eval  n = 1024 tokens
+llama-bench: prompt eval  time =    424.8 ms  -> 2410.3 t/s
+llama-bench: test     = generation  n = 256 tokens
+llama-bench: gen       time =   4885.4 ms  ->   52.4 t/s</div>
+    </div>
+  </div>
+  <p class="demo-note">Les métriques nulls s'affichent « — » (jamais 0). Si le run est <code class="mono">error</code>,
+  un <code class="mono">.alert</code> sémantique rouge remplace les stat cards manquantes et le raw output reste affiché.</p>
+
+  <h3 class="h-group">Mobile (cadre 375 px)</h3>
+  <div class="phone-frame-wrap">
+    <div>
+      <p class="demo-note" style="max-width:40ch">Stat cards en grille 2 colonnes, méta-grid 2 colonnes,
+      commande et raw output en blocs pleins (scroll horizontal interne). Boutons pleine largeur sous 480 px.</p>
+    </div>
+    <div>
+      <div class="phone" role="img" aria-label="Maquette mobile de la vue détail d'un run">
+        <div class="phone-screen">
+          <div style="padding:var(--sp-3)">
+            <p style="font-size:11px;color:var(--c-text-faint);margin-bottom:var(--sp-2)"><a href="#vue-liste">← Runs</a></p>
+            <h3 style="font-size:var(--text-lg);font-weight:600">Llama-3.1-8B-Instruct <span class="badge badge--accent">8B</span></h3>
+            <p style="font-size:11px;color:var(--c-text-faint);margin:4px 0">01/10/2026 · llama.cpp b4952</p>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+              <span class="badge badge--accent">Q4_K_M</span>
+              <span class="badge badge--accent">RTX 4090</span>
+              <span class="badge badge--success"><span class="dot"></span>success</span>
+            </div>
+            <div class="stat-grid" style="grid-template-columns:repeat(2,1fr); margin-top:var(--sp-3)">
+              <div class="stat-card" style="padding:var(--sp-2)"><div class="stat-label" style="font-size:11px">Gen</div><div class="stat-value num" style="font-size:var(--text-xl)">52.4<span class="stat-unit">t/s</span></div></div>
+              <div class="stat-card" style="padding:var(--sp-2)"><div class="stat-label" style="font-size:11px">Prompt</div><div class="stat-value num" style="font-size:var(--text-xl)">2 410<span class="stat-unit">t/s</span></div></div>
+              <div class="stat-card" style="padding:var(--sp-2)"><div class="stat-label" style="font-size:11px">TTFT</div><div class="stat-value num" style="font-size:var(--text-xl)">0.62<span class="stat-unit">s</span></div></div>
+              <div class="stat-card" style="padding:var(--sp-2)"><div class="stat-label" style="font-size:11px">VRAM</div><div class="stat-value num" style="font-size:var(--text-xl)">7.1<span class="stat-unit">GB</span></div></div>
+            </div>
+            <div style="margin-top:var(--sp-3)">
+              <p style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--sp-1)">Commande</p>
+              <div class="code-block" style="font-size:11px;white-space:normal"><span class="cmd">$</span> llama-bench -m Llama-3.1-8B-Instruct-Q4_K_M.gguf -ngl 99 -c 4096 -n 256</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr;gap:var(--sp-2);margin-top:var(--sp-3)">
+              <button class="btn btn--ghost" type="button" style="width:100%">Copier JSON</button>
+              <button class="btn btn--danger" type="button" style="width:100%">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="phone-caption">iPhone 14 (375 × 647)</p>
+    </div>
+  </div>
+</section>
+<section class="section" id="vue-compare" style="scroll-margin-top:72px">
+  <h2>5 · Maquette — Vue comparaison multi-runs</h2>
+  <p class="lede">Sélection de 2 à 5 runs, mise côte à côte : table de comparaison, graphiques superposés,
+  deltas sémantiques (vert = meilleur). Consomme <code class="mono">GET /benchmarks/compare?ids=…</code>.</p>
+  <div class="sample-banner" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Exemple : 3 runs comparés — valeurs d'illustration, pas des mesures réelles.
+  </div>
+
+  <h3 class="h-group">Desktop (≥ 768 px)</h3>
+  <div class="card" style="overflow:hidden">
+    <!-- Sélecteur de runs -->
+    <div class="card-pad" style="background:var(--c-surface-2)">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); flex-wrap:wrap">
+        <div>
+          <h3 style="font-size:var(--text-base); font-weight:600">Runs à comparer <span class="badge badge--accent" style="vertical-align:1px">3 / 5</span></h3>
+          <p class="demo-note" style="margin-top:var(--sp-1)">Sélectionner 2 à 5 runs — un run par couleur de la palette <code class="mono">--ch-*</code>.</p>
+        </div>
+        <button class="btn btn--primary" type="button">Comparer (3)</button>
+      </div>
+      <div class="select-list" style="margin-top:var(--sp-3); grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+        <label class="select-item">
+          <input type="checkbox" checked>
+          <span><i class="swatch" style="background:var(--ch-1)"></i> Llama-3.1-8B · llama.cpp · Q4_K_M</span>
+          <span class="sel-sub">52.4 t/s</span>
+        </label>
+        <label class="select-item">
+          <input type="checkbox" checked>
+          <span><i class="swatch" style="background:var(--ch-2)"></i> Llama-3.1-8B · SGLang · Q8_0</span>
+          <span class="sel-sub">47.1 t/s</span>
+        </label>
+        <label class="select-item">
+          <input type="checkbox" checked>
+          <span><i class="swatch" style="background:var(--ch-3)"></i> Mistral-7B · NInfer · FP16</span>
+          <span class="sel-sub">38.9 t/s</span>
+        </label>
+        <label class="select-item">
+          <input type="checkbox" disabled>
+          <span style="color:var(--c-text-faint)"><i class="swatch" style="background:var(--ch-4)"></i> Qwen2.5-14B · llama.cpp · Q5_K_M</span>
+          <span class="sel-sub">désactivé (max 5)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Table de comparaison -->
+    <div class="card-pad">
+      <div class="cmp-wrap">
+        <table class="cmp-table">
+          <caption class="sr-only">Comparaison de 3 runs : métriques par run, la meilleure valeur de chaque ligne est surlignée</caption>
+          <thead>
+            <tr>
+              <th scope="col">Métrique</th>
+              <th scope="col" class="num"><span class="run-head"><i style="background:var(--ch-1)"></i>Llama 8B · llama.cpp</span></th>
+              <th scope="col" class="num"><span class="run-head"><i style="background:var(--ch-2)"></i>Llama 8B · SGLang</span></th>
+              <th scope="col" class="num"><span class="run-head"><i style="background:var(--ch-3)"></i>Mistral 7B · NInfer</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td scope="row" style="font-weight:600">Gen tok/s</td><td class="num best">52.4</td><td class="num">47.1</td><td class="num">38.9</td></tr>
+            <tr><td scope="row" style="font-weight:600">Prompt tok/s</td><td class="num best">2 410</td><td class="num">1 980</td><td class="num">—</td></tr>
+            <tr><td scope="row" style="font-weight:600">TTFT (s)</td><td class="num best">0.62</td><td class="num">0.84</td><td class="num">1.02</td></tr>
+            <tr><td scope="row" style="font-weight:600">VRAM pic (GB)</td><td class="num best">7.1</td><td class="num">9.4</td><td class="num">14.2</td></tr>
+            <tr><td scope="row" style="font-weight:600">Contexte</td><td class="num">4 096</td><td class="num">8 192</td><td class="num">4 096</td></tr>
+            <tr><td scope="row" style="font-weight:600">Durée (s)</td><td class="num best">138.7</td><td class="num">152.0</td><td class="num">201.3</td></tr>
+            <tr><td scope="row" style="font-weight:600">Statut</td><td><span class="badge badge--success"><span class="dot"></span>success</span></td><td><span class="badge badge--success"><span class="dot"></span>success</span></td><td><span class="badge badge--partial"><span class="dot"></span>partial</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="demo-note" style="margin-top:var(--sp-2)">Meilleure valeur de chaque ligne en accent + <code class="mono">.best</code> —
+      gen/prompt : la plus élevée ; TTFT/VRAM/durée : la plus basse.
+      Delta optionnel en bas de colonne : <span class="delta up">▲ +11 %</span> / <span class="delta down">▼ −19 %</span> par rapport au run de référence (le 1er).</p>
+    </div>
+
+    <!-- Graphiques superposés -->
+    <div class="card-pad" style="padding-top:var(--sp-3)">
+      <div class="demo" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+        <figure class="chart" style="margin:0">
+          <h4>Gen tok/s × VRAM (nuage)</h4>
+          <p class="chart-sub">Compromis vitesse / mémoire — 3 runs</p>
+          <svg viewBox="0 0 320 180" role="img" aria-label="Nuage de points : 3 runs comparés, Llama 8B llama.cpp au meilleur gen et VRAM modérée, Mistral 7B NInfer moins rapide et plus gourmand">
+            <line class="grid-line" x1="40" y1="10" x2="40" y2="150"/>
+            <line class="grid-line" x1="40" y1="150" x2="310" y2="150"/>
+            <line class="grid-line" x1="40" y1="80" x2="310" y2="80" stroke-dasharray="3 4"/>
+            <line class="grid-line" x1="175" y1="10" x2="175" y2="150" stroke-dasharray="3 4"/>
+            <text class="axis-label" x="34" y="14" text-anchor="end">60</text>
+            <text class="axis-label" x="34" y="84" text-anchor="end">30</text>
+            <text class="axis-label" x="34" y="154" text-anchor="end">0</text>
+            <text class="axis-label" x="46" y="168">0</text>
+            <text class="axis-label" x="175" y="168" text-anchor="middle">12 GB</text>
+            <text class="axis-label" x="304" y="168" text-anchor="end">24 GB</text>
+            <text class="axis-label" x="175" y="178" text-anchor="middle">VRAM pic (GB)</text>
+            <circle cx="180" cy="52" r="10" style="fill:var(--ch-1)" fill-opacity=".85"/>
+            <circle cx="205" cy="62" r="12" style="fill:var(--ch-2)" fill-opacity=".85"/>
+            <circle cx="235" cy="76" r="9" style="fill:var(--ch-3)" fill-opacity=".85"/>
+            <text class="bar-label" x="180" y="34" text-anchor="middle">52.4</text>
+            <text class="bar-label" x="205" y="44" text-anchor="middle">47.1</text>
+            <text class="bar-label" x="235" y="58" text-anchor="middle">38.9</text>
+          </svg>
+          <div class="legend" aria-hidden="true">
+            <span><i style="background:var(--ch-1)"></i>Llama 8B · llama.cpp</span>
+            <span><i style="background:var(--ch-2)"></i>Llama 8B · SGLang</span>
+            <span><i style="background:var(--ch-3)"></i>Mistral 7B · NInfer</span>
+          </div>
+        </figure>
+        <figure class="chart" style="margin:0">
+          <h4>TTFT par contexte</h4>
+          <p class="chart-sub">Plus bas = meilleur (s)</p>
+          <svg viewBox="0 0 320 180" role="img" aria-label="Courbes du TTFT selon le contexte pour les 3 runtimes comparés">
+            <line class="grid-line" x1="40" y1="10" x2="40" y2="150"/>
+            <line class="grid-line" x1="40" y1="150" x2="310" y2="150"/>
+            <line class="grid-line" x1="40" y1="80" x2="310" y2="80" stroke-dasharray="3 4"/>
+            <text class="axis-label" x="34" y="14" text-anchor="end">4s</text>
+            <text class="axis-label" x="34" y="84" text-anchor="end">2s</text>
+            <text class="axis-label" x="34" y="154" text-anchor="end">0</text>
+            <text class="axis-label" x="46" y="168">1K</text>
+            <text class="axis-label" x="125" y="168" text-anchor="middle">4K</text>
+            <text class="axis-label" x="215" y="168" text-anchor="middle">8K</text>
+            <text class="axis-label" x="304" y="168" text-anchor="end">16K</text>
+            <polyline fill="none" stroke-width="2" style="stroke:var(--ch-1)" points="50,52 130,68 220,96 300,124"/>
+            <polyline fill="none" stroke-width="2" style="stroke:var(--ch-2)" points="50,64 130,84 220,112 300,138"/>
+            <polyline fill="none" stroke-width="2" stroke-dasharray="4 3" style="stroke:var(--ch-3)" points="50,76 130,96 220,124 300,146"/>
+            <circle cx="50" cy="52" r="3" style="fill:var(--ch-1)"/><circle cx="50" cy="64" r="3" style="fill:var(--ch-2)"/><circle cx="50" cy="76" r="3" style="fill:var(--ch-3)"/>
+            <circle cx="300" cy="124" r="3" style="fill:var(--ch-1)"/><circle cx="300" cy="138" r="3" style="fill:var(--ch-2)"/><circle cx="300" cy="146" r="3" style="fill:var(--ch-3)"/>
+          </svg>
+          <div class="legend" aria-hidden="true">
+            <span><i style="background:var(--ch-1)"></i>llama.cpp</span>
+            <span><i style="background:var(--ch-2)"></i>SGLang</span>
+            <span><i style="background:var(--ch-3)"></i>NInfer</span>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="h-group">Mobile (cadre 375 px)</h3>
+  <div class="phone-frame-wrap">
+    <div>
+      <p class="demo-note" style="max-width:40ch">Sur mobile, la table de comparaison devient une <strong>vue par métrique</strong> :
+      chaque métrique s'affiche en bloc horizontal avec les runs empilés (pas de scroll horizontal).
+      Le nuage de points passe en barres groupées (plus lisible à 375 px).</p>
+    </div>
+    <div>
+      <div class="phone" role="img" aria-label="Maquette mobile de la vue comparaison">
+        <div class="phone-screen">
+          <div style="padding:var(--sp-3)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3)">
+              <span style="font-weight:600;font-size:var(--text-base)">Comparaison</span>
+              <span class="badge badge--accent" style="font-size:11px">3 / 5</span>
+            </div>
+            <label class="select-item" style="padding:var(--sp-2)"><input type="checkbox" checked><span style="font-size:var(--text-sm)"><i class="swatch" style="background:var(--ch-1)"></i> Llama 8B · llama.cpp</span><span class="sel-sub">52.4</span></label>
+            <label class="select-item" style="padding:var(--sp-2)"><input type="checkbox" checked><span style="font-size:var(--text-sm)"><i class="swatch" style="background:var(--ch-2)"></i> Llama 8B · SGLang</span><span class="sel-sub">47.1</span></label>
+            <label class="select-item" style="padding:var(--sp-2)"><input type="checkbox" checked><span style="font-size:var(--text-sm)"><i class="swatch" style="background:var(--ch-3)"></i> Mistral 7B · NInfer</span><span class="sel-sub">38.9</span></label>
+            <p style="font-size:var(--text-sm);font-weight:600;margin:var(--sp-3) 0 var(--sp-1)">Gen tok/s</p>
+            <div style="display:grid;gap:var(--sp-1)">
+              <div style="display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-2)"><i class="swatch" style="background:var(--ch-1)"></i><span style="font-size:var(--text-sm);flex:1">llama.cpp</span><strong class="mono best">52.4</strong></div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-2)"><i class="swatch" style="background:var(--ch-2)"></i><span style="font-size:var(--text-sm);flex:1">SGLang</span><strong class="mono">47.1</strong></div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-2)"><i class="swatch" style="background:var(--ch-3)"></i><span style="font-size:var(--text-sm);flex:1">NInfer</span><strong class="mono">38.9</strong></div>
+            </div>
+            <p style="font-size:var(--text-sm);font-weight:600;margin:var(--sp-3) 0 var(--sp-1)">TTFT (s)</p>
+            <div style="display:grid;gap:var(--sp-1)">
+              <div style="display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-2)"><i class="swatch" style="background:var(--ch-1)"></i><span style="font-size:var(--text-sm);flex:1">llama.cpp</span><strong class="mono best">0.62</strong></div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-2)"><i class="swatch" style="background:var(--ch-2)"></i><span style="font-size:var(--text-sm);flex:1">SGLang</span><strong class="mono">0.84</strong></div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-2)"><i class="swatch" style="background:var(--ch-3)"></i><span style="font-size:var(--text-sm);flex:1">NInfer</span><strong class="mono">1.02</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="phone-caption">iPhone 14 (375 × 647)</p>
+    </div>
+  </div>
+</section>
+
+<footer class="spec-footer">
+  <div class="container">
+    <p><strong>Design system — Local LLM Bench.</strong> Un seul fichier, zéro dépendance, zéro build — ouvert dans n'importe quel navigateur.
+    Les tokens sont la source de vérité : à re-mapper dans Tailwind côté app. Les maquettes sont statiques (valeurs d'exemple).</p>
+    <p style="margin-top:var(--sp-2)">Accessibilité : contraste AA, focus visible, <code class="mono">aria-*</code>, graphiques <code class="mono">role="img"</code>.
+    Thème sombre via le switch (persisté). Responsive : mobile-first, tableaux → cartes sous 768 px.</p>
+  </div>
+</footer>
+
+<script>
+// Bascule thème clair/sombre — persisté en localStorage, respecte la préférence système au 1er chargement.
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById('themeToggle');
+  var label = document.getElementById('themeLabel');
+  var saved = localStorage.getItem('llm-bench-theme');
+  var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+    label.textContent = t === 'dark' ? 'Thème sombre' : 'Thème clair';
+  }
+  apply(theme);
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('llm-bench-theme', next);
+    apply(next);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local-llm-bench/schemas/benchmark.json",
+  "title": "Local LLM Benchmark Run",
+  "description": "One benchmark run of a local LLM. Units are encoded in field names: _tok_s = tokens/second, _s = seconds, _gb = gigabytes, *context_length*/*_tokens* = token counts. Stable filter keys for the API/UI: model.name, runtime.name, quantization, hardware.gpu.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model",
+    "runtime",
+    "quantization",
+    "hardware",
+    "context_length",
+    "prompt_tokens",
+    "generation_tokens",
+    "metrics",
+    "status",
+    "timestamp",
+    "raw_output"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique run id. Optional: the storage API assigns one when absent."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC time the run started, ISO 8601 (e.g. 2026-10-01T14:30:00+00:00)."
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Model name as distributed, e.g. 'Llama-3.1-8B-Instruct'."
+        },
+        "parameters": {
+          "type": "string",
+          "description": "Parameter count label, e.g. '8B'."
+        },
+        "arch": {
+          "type": "string",
+          "description": "Architecture family, e.g. 'llama', 'mistral'."
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "enum": ["llama.cpp", "NInfer", "SGLang"],
+          "description": "Local inference runtime."
+        },
+        "version": {
+          "type": ["string", "null"],
+          "description": "Runtime version if known, else null."
+        }
+      }
+    },
+    "quantization": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Weight quantization of the model file, e.g. 'Q4_K_M', 'Q8_0', 'FP16', 'NVFP4'. Free string: naming varies per runtime."
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gpu"],
+      "properties": {
+        "gpu": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GPU model used, e.g. 'NVIDIA RTX 4090'; 'CPU' when no GPU."
+        },
+        "gpu_vram_total_gb": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Total GPU memory in gigabytes, null if unknown."
+        },
+        "cpu": {
+          "type": ["string", "null"],
+          "description": "CPU model, null if unknown."
+        },
+        "ram_gb": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "System RAM in gigabytes."
+        },
+        "os": {
+          "type": ["string", "null"],
+          "description": "Operating system."
+        }
+      }
+    },
+    "context_length": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Context window size in tokens."
+    },
+    "prompt_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Prompt size in tokens."
+    },
+    "generation_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of generated tokens."
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt_processing_tok_s",
+        "generation_tok_s",
+        "ttft_s",
+        "vram_peak_gb",
+        "duration_s"
+      ],
+      "description": "Measured metrics. Values are explicit null when not measurable (failed run, missing counter).",
+      "properties": {
+        "prompt_processing_tok_s": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Prompt processing speed in tokens/second."
+        },
+        "generation_tok_s": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Generation speed in tokens/second."
+        },
+        "ttft_s": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Time to first token in seconds."
+        },
+        "vram_peak_gb": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Peak GPU memory used, in gigabytes."
+        },
+        "duration_s": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Total run duration in seconds."
+        }
+      }
+    },
+    "status": {
+      "enum": ["success", "partial", "error"],
+      "description": "success: all metrics present. partial: run finished, some metrics null. error: run failed, most metrics null."
+    },
+    "raw_output": {
+      "type": "string",
+      "description": "Raw runtime log/output captured for the run. May be empty."
+    },
+    "command": {
+      "type": ["string", "null"],
+      "description": "Exact command (or equivalent invocation) used for this run, so the result can be reproduced. null when not captured."
+    },
+    "agent_task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "success"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The agentic task the model was solving, e.g. 'resolve a failing pytest run'."
+        },
+        "time_to_solution_s": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Wall-clock seconds from task start to solution. null when the task was not solved or timing unknown."
+        },
+        "success": {
+          "type": "boolean",
+          "description": "true when the task was solved within the run."
+        }
+      },
+      "description": "Present only for agentic-task runs: time-to-solution and success/failure. Absent for plain throughput runs."
+    },
+    "example": {
+      "type": "boolean",
+      "description": "true when this run is synthetic sample data, not a measured benchmark. Absent or false = real run."
+    }
+  }
+}
