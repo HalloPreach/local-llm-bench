@@ -138,6 +138,16 @@ button,input,select{font:inherit; color:inherit}
 }
 .app-nav a:hover{background:var(--c-surface-2); text-decoration:none}
 .app-nav a[aria-current="page"]{background:var(--c-accent-soft); color:var(--c-accent)}
+.requests-view{padding-top:var(--sp-5);padding-bottom:var(--sp-7)}
+.requests-heading,.requests-toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap}
+.requests-heading h1{font-size:var(--text-3xl);line-height:var(--leading-tight)}
+.requests-heading .badge{white-space:nowrap}
+.requests-stats{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:var(--sp-5) 0}
+.requests-section h2{font-size:var(--text-xl)}
+.requests-toolbar{margin-bottom:var(--sp-4)}
+.requests-toolbar label{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--text-sm)}
+.requests-toolbar select{padding:var(--sp-2);background:var(--c-surface);border:1px solid var(--c-border-strong);border-radius:var(--r-sm)}
+.requests-section td{white-space:nowrap}
 .app-header .spacer{flex:1}
 @media (max-width:639px){
   /* Mobile : pas de markup .mobile-nav — on garde .app-nav (elle s'enroule sur

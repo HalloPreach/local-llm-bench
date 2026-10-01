@@ -1,5 +1,29 @@
 # Local LLM Bench
 
+## Requêtes nInfer en direct
+
+La page [Requêtes](https://hallopreach.github.io/local-llm-bench/ui/requests.html)
+est intégrée au même site GitHub Pages. Elle affiche le débit médian en tokens/s,
+le TTFT, le temps total de réponse et l'historique des requêtes. Elle se
+rafraîchit toutes les 5 secondes tant que l'onglet est visible.
+
+Les mesures proviennent du journal opérationnel de nInfer sur **ce PC**. Le
+service local ci-dessous écoute seulement sur `127.0.0.1:8765`; seuls les
+champs de métriques sont transmis à la page. Aucun prompt, réponse ou secret
+n'est stocké dans GitHub Pages. Le navigateur peut demander l'autorisation
+d'accéder au réseau local lors de la première visite.
+
+```powershell
+python ninfer_bridge.py
+```
+
+Le journal est détecté automatiquement dans
+`%LOCALAPPDATA%\ninfer-windows\*\server.stderr.log`. Pour un autre chemin :
+`python ninfer_bridge.py --log C:\chemin\journal.log`.
+
+Le TTS de la partie benchmarks désigne *time-to-solution*; le temps total de
+réponse des requêtes nInfer est affiché séparément pour éviter toute ambiguïté.
+
 Dashboard de runs de benchmarks de LLM **locaux** (llama.cpp, NInfer, SGLang) :
 liste, filtres, graphiques, comparaison, vue par modèle. Une seule base SQLite,
 zéro dépendance côté UI (vanilla JS + SVG), zéro CORS (l'API sert le dossier `ui/`).
