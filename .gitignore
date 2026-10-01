@@ -6,3 +6,4 @@ bench.db
 *.db-journal
 *.db-wal
 *.db-shm
+bench.db.old
