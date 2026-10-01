@@ -228,6 +228,10 @@ table.cls-table{width:100%; border-collapse:collapse; background:var(--c-surface
 .cls-table .num{text-align:right; font-family:var(--font-mono); font-size:var(--text-sm)}
 .cls-table .sub{display:block; font-size:var(--text-xs); color:var(--c-text-faint)}
 .cls-table .best{color:var(--c-accent); font-weight:600}
+/* Ligne de groupe fournisseur (page Modèles) */
+.cls-table .group-row td{background:var(--c-surface-2); font-weight:600; font-size:var(--text-xs); text-transform:uppercase; letter-spacing:.04em; color:var(--c-text-muted)}
+.cls-table .group-row .sub{display:inline; margin-left:var(--sp-2); font-weight:400; text-transform:none; letter-spacing:0; color:var(--c-text-faint)}
+.group-label{font-size:var(--text-sm); font-weight:600; margin:var(--sp-3) 0 var(--sp-1); color:var(--c-text-muted)}
 @media (max-width:767px){
   /* Mobile : le tableau se transforme en pile de cartes (voir .run-cards) */
   .cls-table{display:none}

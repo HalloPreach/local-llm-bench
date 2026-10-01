@@ -518,6 +518,10 @@ function renderCmpTable(runs) {
 }
 
 /* ================= VUE MODÈLES (models.html) ================= */
+/* Groupage par fournisseur (model.arch, repli « Autre ») + recherche client :
+   le choix d'un modèle se lit en diagonale (fournisseur → taille → best gen → statut). */
+const models = { items: [], q: '' };
+
 async function modelsInit() {
   initTheme();
   let items = [];
@@ -530,35 +534,75 @@ async function modelsInit() {
     } else { const b = $('#errorBox'); b.hidden = false; $('#errorText').textContent = 'API injoignable — ' + e.message; return; }
   }
   if (!items.length) {
+    $('#mFilterBar').hidden = true;
     $('#models').innerHTML = '<div class="empty-state" style="padding:var(--sp-4)"><h3>Base vide</h3><p>Aucun run — insérez des runs via l\'API (POST /benchmarks).</p></div>';
     return;
   }
-  // agrégation par modèle : best gen, mean TTFT, max VRAM, counts
+  models.items = items;
+  $('#mSearch').addEventListener('input', e => { models.q = e.target.value.trim().toLowerCase(); renderModels(); });
+  renderModels();
+}
+
+/* agrégation par modèle : best gen, TTFT moyen, VRAM pic, taille, fournisseur,
+   statut du dernier test, comptes (erreurs, succès réels), variants runtime·quant */
+function modelRows() {
   const byModel = {};
-  for (const d of items) {
-    const g = (byModel[d.model.name] ||= { name: d.model.name, runs: 0, err: 0, ex: 0, gens: [], ttfts: [], vrams: [], variants: new Set() });
+  for (const d of models.items) {
+    const g = (byModel[d.model.name] ||= { name: d.model.name, runs: 0, err: 0, ex: 0, gens: [], ttfts: [], vrams: [], variants: new Set(), params: null, arch: null, lastTs: '', lastStatus: null, succ: 0, real: 0 });
     g.runs++; if (d.status === 'error') g.err++; if (d.example) g.ex++;
-    g.variants.add(`${d.runtime.name} · ${d.quantization}`);
+    if (!d.example) { g.real++; if (d.status === 'success') g.succ++; }
+    g.variants.add(`${d.runtime.name}${d.runtime.version ? ' ' + d.runtime.version : ''} · ${d.quantization}`);
+    g.params ||= d.model.parameters || null; g.arch ||= d.model.arch || null;
+    if (d.timestamp > g.lastTs) { g.lastTs = d.timestamp; g.lastStatus = d.status; }
     if (d.metrics.generation_tok_s != null) g.gens.push(d.metrics.generation_tok_s);
     if (d.metrics.ttft_s != null) g.ttfts.push(d.metrics.ttft_s);
     if (d.metrics.vram_peak_gb != null) g.vrams.push(d.metrics.vram_peak_gb);
   }
   const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
-  const rows = Object.values(byModel).sort((a, b) =>
-    (b.gens.length ? Math.max(...b.gens) : -1) - (a.gens.length ? Math.max(...a.gens) : -1));
-  $('#models').innerHTML = `
-    <div class="table-wrap"><table class="cls-table"><caption class="sr-only">Synthèse par modèle</caption>
-    <thead><tr><th>Modèle</th><th>Runs</th><th>Best Gen</th><th>TTFT moyen</th><th>VRAM pic max</th><th>Variants (runtime · quant)</th></tr></thead>
-    <tbody>${rows.map(g => {
-      const best = g.gens.length ? Math.max(...g.gens) : null;
-      return `<tr>
-        <td><a href="./?model=${encodeURIComponent(g.name)}">${esc(g.name)}</a>${g.ex ? `<span class="sub"> ex</span>` : ''}</td>
-        <td class="num">${g.runs}${g.err ? ` <span class="sub">${g.err} en erreur</span>` : ''}</td>
-        <td class="num">${fmt(best, 1)}</td>
-        <td class="num">${fmt(avg(g.ttfts), 2)}</td>
-        <td class="num">${g.vrams.length ? fmt(Math.max(...g.vrams), 1) : '—'}</td>
-        <td>${[...g.variants].map(esc).join('<br>')}</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+  const rows = Object.values(byModel);
+  for (const g of rows) { g.best = g.gens.length ? Math.max(...g.gens) : null; g.ttftAvg = avg(g.ttfts); g.vramMax = g.vrams.length ? Math.max(...g.vrams) : null; }
+  rows.sort((a, b) => (b.best ?? -1) - (a.best ?? -1));
+  return rows;
+}
+
+function renderModels() {
+  const q = models.q;
+  const rows = modelRows().filter(g => !q || `${g.name} ${g.arch || ''} ${g.params || ''} ${[...g.variants].join(' ')}`.toLowerCase().includes(q));
+  // groupage par fournisseur (arch) ; groupes et modèles triés par best gen décroissant
+  const groups = {};
+  for (const g of rows) (groups[g.arch || 'Autre'] ||= []).push(g);
+  const groupOrder = Object.keys(groups).sort((a, b) => (groups[b][0].best ?? -1) - (groups[a][0].best ?? -1));
+  const label = a => a.charAt(0).toUpperCase() + a.slice(1);
+  const rowCells = g => `
+        <td><a href="./?model=${encodeURIComponent(g.name)}">${esc(g.name)}${g.ex ? `<span class="badge badge--neutral">ex</span>` : ''}</a></td>
+        <td>${g.params ? `<span class="badge badge--neutral">${esc(g.params)}</span>` : '—'}</td>
+        <td class="num">${g.runs}${g.err ? `<span class="sub">${g.err} en erreur</span>` : ''}</td>
+        <td class="num${g.best != null ? ' best' : ''}">${fmt(g.best, 1)}</td>
+        <td class="num">${fmt(g.ttftAvg, 2)}</td>
+        <td class="num">${fmt(g.vramMax, 1)}</td>
+        <td>${statusBadge(g.lastStatus)}<span class="sub">${g.real ? `${g.succ}/${g.real} succès` : 'exemples'}</span></td>
+        <td>${[...g.variants].map(esc).join('<br>')}</td>`;
+  $('#models').innerHTML = rows.length ? (
+    `<div class="table-wrap"><table class="cls-table"><caption class="sr-only">Synthèse par modèle, groupée par fournisseur</caption>` +
+    `<thead><tr><th>Modèle</th><th>Taille</th><th>Runs</th><th>Best Gen (t/s)</th><th>TTFT moyen (s)</th><th>VRAM pic (GB)</th><th>Statut test</th><th>Variants (runtime · quant)</th></tr></thead><tbody>` +
+    groupOrder.map(a => `<tr class="group-row"><td colspan="8">${label(a)}<span class="sub">${groups[a].length} modèle${groups[a].length > 1 ? 's' : ''}</span></td></tr>` +
+      groups[a].map(g => `<tr>${rowCells(g)}</tr>`).join('')).join('') +
+    `</tbody></table></div>` +
+    // mobile : cartes (la cls-table est masquée < 768px)
+    `<div class="run-cards">${groupOrder.map(a =>
+      `<h4 class="group-label">${label(a)}</h4>` +
+      groups[a].map(g => `<div class="run-card"><a href="./?model=${encodeURIComponent(g.name)}" style="display:block">` +
+        `<div class="run-title">${esc(g.name)}${g.ex ? ' <span class="badge badge--neutral">ex</span>' : ''}</div>` +
+        statusBadge(g.lastStatus) +
+        `<dl style="margin-top:var(--sp-2)">` +
+        (g.params ? `<div class="kv"><dt>Taille</dt><dd>${esc(g.params)}</dd></div>` : '') +
+        `<div class="kv"><dt>Runs</dt><dd>${g.runs}</dd></div>` +
+        `<div class="kv"><dt>Best Gen</dt><dd>${fmt(g.best, 1)} t/s</dd></div>` +
+        `<div class="kv"><dt>TTFT moyen</dt><dd>${fmt(g.ttftAvg, 2)} s</dd></div>` +
+        `<div class="kv"><dt>VRAM pic</dt><dd>${fmt(g.vramMax, 1)} GB</dd></div>` +
+        `<div class="kv"><dt>Variants</dt><dd>${[...g.variants].map(esc).join(' · ')}</dd></div></dl></a></div>`).join('')
+    ).join('')}</div>`)
+    : `<div class="empty-state"><div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.3-4.3M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div><h3>Aucun modèle</h3><p>Aucun résultat avec ces filtres.</p><button class="btn btn--ghost btn--sm empty-cta" type="button" onclick="document.getElementById('mSearch').value='';document.getElementById('mSearch').dispatchEvent(new Event('input'))">Réinitialiser la recherche</button></div>`;
 }
 
 /* ================= VUE DASHBOARD (dashboard.html) ================= */

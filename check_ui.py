@@ -53,7 +53,7 @@ required = {
                    'id="f-gpu"', 'id="f-status"', 'id="genChart"', 'id="runs"', 'id="pager"', 'id="summary"'],
     'detail.html': ['id="detail"', 'id="crumb"'],
     'compare.html': ['id="runList"', 'id="goBtn"', 'id="cmpTable"', 'id="scatter"', 'id="ttftChart"'],
-    'models.html': ['id="models"'],
+    'models.html': ['id="models"', 'id="mSearch"', 'id="mFilterBar"'],
     'dashboard.html': ['id="kpis"', 'id="errorBox"'],
 }
 for name, reqs in required.items():
@@ -96,6 +96,14 @@ if '.alert[hidden]{display:none}' not in css:
 for token in ('d.command', 'd.agent_task', 'd.example', 'modelsInit', 'dashboardInit', 'Tâche agent'):
     if token not in js:
         problems.append(f"app.js : champ absent {token!r}")
+
+# Polissage page Modèles (P3) : groupage fournisseurs, recherche, statuts
+for token in ('group-row', 'group-label', 'renderModels', 'modelRows'):
+    if token not in js:
+        problems.append(f"app.js : polissage Models absent {token!r}")
+for token in ('.group-row', '.group-label'):
+    if token not in css:
+        problems.append(f"style.css : groupe modèles absent {token!r}")
 
 if problems:
     print("ECHEC — check_ui.py")

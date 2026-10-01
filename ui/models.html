@@ -26,12 +26,20 @@
 </header>
 
 <main class="container view">
-  <section class="card card-pad" aria-label="Vue par modèle">
+  <!-- Recherche (client) : nom, fournisseur, taille, runtime, quant -->
+  <section class="filter-bar" aria-label="Recherche" id="mFilterBar">
+    <div class="cls-field" style="flex:1 1 260px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="search" id="mSearch" placeholder="Rechercher (modèle, taille, runtime, quant)…" aria-label="Rechercher un modèle">
+    </div>
+  </section>
+
+  <section class="card card-pad" aria-label="Vue par modèle" style="margin-top:var(--sp-3)">
     <div style="display:flex; align-items:baseline; gap:var(--sp-2); flex-wrap:wrap">
       <h2 style="font-size:var(--text-xl)">Meilleure gen par modèle</h2>
       <p class="demo-note">Max de Gen tok/s, TTFT moyen et pic VRAM sur les runs de chaque modèle (exemples inclus, marqués « ex »).</p>
     </div>
-    <div id="models"></div>
+    <div id="models" style="margin-top:var(--sp-3)"><div class="skeleton-row"><div class="skeleton" style="width:40%;height:18px"></div><div class="skeleton" style="width:30%;height:18px"></div></div></div>
   </section>
   <div id="errorBox" class="alert" hidden>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
