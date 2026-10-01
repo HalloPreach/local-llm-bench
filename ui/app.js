@@ -417,6 +417,9 @@ const CMP_ROWS = [
   { key: 'ttft_s', label: 'TTFT (s)', dir: -1, d: 2 },
   { key: 'vram_peak_gb', label: 'VRAM pic (GB)', dir: -1, d: 1 },
   { key: 'duration_s', label: 'Durée (s)', dir: -1, d: 1 },
+  // TTS (time-to-solution) : le champ du run, pas metrics — meilleure valeur = min,
+  // « — » si le run n'a pas de tâche agent.
+  { key: 'tts', label: 'TTS (s)', dir: -1, d: 1, get: d => d.agent_task && d.agent_task.time_to_solution_s },
 ];
 
 async function compareInit() {
@@ -432,22 +435,100 @@ async function compareInit() {
   }
   if (!items.length) {
     $('#runList').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><h3>Base vide</h3><p>Aucun run à comparer — insérez d\'abord des runs via l\'API.</p></div>';
+    $('#cmpFilterBar').hidden = true;
     return;
   }
+  // Filtres + tri de la liste de sélection : recherche libre, filtre modèle (rempli
+  // à partir des données), tri par métrique ou date (les valeurs manquantes en fin).
+  // La référence des deltas = 1er run coché DANS L'ORDRE DE LA LISTE AFFICHÉE.
+  cmp.items = items;
+  cmp.filters = { q: '', model: '' };
+  cmp.sort = { key: 'date', dir: -1 };
+  const models = [...new Set(items.map(d => d.model.name))].sort();
+  $('#cmpModel').innerHTML = '<option value="">Tous</option>' + models.map(m => `<option>${esc(m)}</option>`).join('');
+  const cmpSort = (key, dir) => {
+    const val = d => key === 'date' ? d.timestamp : key === 'tts'
+      ? (d.agent_task ? d.agent_task.time_to_solution_s : null) : d.metrics[key];
+    return [...cmp.items].sort((a, b) => {
+      const va = val(a), vb = val(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (typeof va === 'string') return va.localeCompare(vb) * dir;
+      return (vb - va) * dir;
+    });
+  };
+  const rowsFor = () => {
+    const q = cmp.filters.q.toLowerCase();
+    const rows = cmpSort(cmp.sort.key, cmp.sort.dir)
+      .filter(d => !cmp.filters.model || d.model.name === cmp.filters.model)
+      .filter(d => !q || [d.model.name, d.runtime.name, d.quantization, d.hardware.gpu, d.status]
+        .join(' ').toLowerCase().includes(q));
+    // l'ordre de sélection suit l'ordre affiché : les runs sélectionnés restent
+    // dans cmp.sel même masqués par le filtre (on ne perd jamais la sélection),
+    // mais leur ordre suit le tri courant
+    const rids = new Set(rows.map(d => d.id));
+    const visible = rows.filter(d => cmp.sel.has(d.id));
+    const hidden = (cmp.rows || []).filter(d => cmp.sel.has(d.id) && !rids.has(d.id));
+    cmp.sel = new Set([...visible, ...hidden].map(d => d.id));
+    return rows;
+  };
   const shortId = d => d.id.length > 14 ? d.id.slice(0, 8) + '…' : d.id;
-  $('#runList').innerHTML = items.map(d => `
-    <label class="select-item"><input type="checkbox" value="${esc(d.id)}">
-      <span class="run-title" style="font-size:var(--text-sm)">${esc(d.model.name)}<span class="sel-sub">${esc(d.runtime.name)} · ${shortId(d)}</span></span>
-    </label>`).join('');
+  const renderList = () => {
+    cmp.rows = rowsFor();
+    $('#runList').innerHTML = cmp.rows.map(d => {
+      const m = d.metrics;
+      return `<label class="select-item" data-id="${esc(d.id)}"><input type="checkbox" value="${esc(d.id)}">
+      <span class="run-title" style="font-size:var(--text-sm); flex:1">${esc(d.model.name)}${d.example ? '<span class="sub"> ex</span>' : ''}<br>
+      <span class="sel-sub">${esc(d.runtime.name)} · ${esc(d.quantization)} · ${shortId(d)}</span></span>
+      <span class="sel-metrics mono" style="font-size:var(--text-xs); color:var(--c-text-faint); text-align:right">Gen ${fmt(m.generation_tok_s, 1)}<br>${statusBadge(d.status)}</span>
+    </label>`;
+    }).join('') + `<div class="empty-state" id="listEmpty" hidden style="grid-column:1/-1"><h3>Aucun run</h3><p>Aucun résultat avec ces filtres.</p><button class="btn btn--ghost btn--sm empty-cta" type="button" onclick="document.getElementById('cmpReset').click()">Réinitialiser les filtres</button></div>`;
+    $$('#runList input').forEach(c => c.addEventListener('change', () => {
+      // l'ordre de sélection = ordre d'apparition dans la liste (tri courant) :
+      // le 1er coché est la référence des deltas, max 5
+      cmp.sel = new Set($$('#runList input:checked').slice(0, 5).map(c => c.value));
+      $$('#runList input:checked').slice(5).forEach(c => { c.checked = false; });
+      refresh();
+    }));
+    $$('#runList input').forEach(c => { c.checked = cmp.sel.has(c.value); });
+    const n = cmp.rows.length;
+    $('#listEmpty').hidden = n > 0;
+    $('#selNote').innerHTML = n
+      ? `<span class="sub" style="color:var(--c-text-muted)">${n} run${n > 1 ? 's' : ''} affiché${n > 1 ? 's' : ''}</span>`
+      : '';
+  };
   const refresh = () => {
-    const boxes = $$('#runList input:checked');
-    boxes.slice(5).forEach(c => { c.checked = false; });
-    cmp.sel = new Set(boxes.slice(0, 5).map(c => c.value));
+    // met à jour les éléments d'état (compteurs, bouton, marque réf) sans re-rendu
+    const shown = new Set(cmp.rows.map(d => d.id));
+    $$('#runList label').forEach(l => { l.hidden = !shown.has(l.dataset.id); });
     $('#selCount').textContent = `${cmp.sel.size} / 5`;
     $('#goBtn').disabled = cmp.sel.size < 2;
     $('#goBtn').textContent = `Comparer (${cmp.sel.size})`;
+    const first = [...cmp.sel][0];
+    $$('#runList label').forEach(l => {
+      let ref = l.querySelector('.ref-mark');
+      if (ref) ref.remove();
+      if (l.dataset.id === first && !l.hidden) {
+        l.querySelector('.run-title').insertAdjacentHTML(
+          'afterend', '<span class="badge badge--accent ref-mark" title="Run de référence — base des deltas">réf</span>');
+      }
+    });
   };
-  $$('#runList input').forEach(c => c.addEventListener('change', refresh));
+  $('#cmpSearch').addEventListener('input', e => { cmp.filters.q = e.target.value.trim(); renderList(); refresh(); });
+  $('#cmpModel').addEventListener('change', e => { cmp.filters.model = e.target.value; renderList(); refresh(); });
+  $('#cmpReset').addEventListener('click', () => {
+    cmp.filters.q = ''; cmp.filters.model = '';
+    cmp.sort = { key: 'date', dir: -1 };
+    $('#cmpSearch').value = ''; $('#cmpModel').value = ''; $('#cmpSort').value = 'date:-1';
+    renderList(); refresh();
+  });
+  $('#cmpSort').addEventListener('change', e => {
+    const [k, dir] = e.target.value.split(':');
+    cmp.sort = { key: k, dir: +dir };
+    renderList(); refresh();
+  });
+  renderList();
   $('#goBtn').addEventListener('click', runCompare);
   refresh();
 }
@@ -498,12 +579,20 @@ function deltaCell(ref, v, dir) {
 }
 
 function renderCmpTable(runs) {
-  const ths = runs.map((r, i) => `<th class="num"><span class="run-head"><i style="background:${r.color}"></i><span>${esc(r.label)}<br><span class="mono" style="font-size:var(--text-xs);color:var(--c-text-faint)">${esc(r.id)}</span></span></span></th>`).join('');
+  const ths = runs.map((r, i) => `<th class="num"><span class="run-head"><i style="background:${r.color}"></i><span>${esc(r.label)}${i === 0 ? '<span class="badge badge--accent ref-mark" title="Référence — base des deltas">réf</span>' : ''}<br><span class="mono" style="font-size:var(--text-xs);color:var(--c-text-faint)">${esc(r.id)}</span></span></span></th>`).join('');
+  // meilleure valeur de la ligne : max si dir>0, min sinon ; null ignorés
+  const rowBest = (row, vals) => {
+    const nums = vals.filter(v => v != null);
+    if (!nums.length) return null;
+    return row.dir > 0 ? Math.max(...nums) : Math.min(...nums);
+  };
   const body = CMP_ROWS.map(row => {
-    const vals = runs.map(r => r.d.metrics[row.key]);
+    // les lignes sans get lisent metrics ; la ligne TTS lit agent_task.time_to_solution_s
+    const vals = runs.map(r => row.get ? row.get(r.d) : r.d.metrics[row.key]);
     const refV = vals[0];
+    const b = rowBest(row, vals);
     return `<tr><td style="font-weight:500">${row.label}</td>` + vals.map((v, i) =>
-      `<td class="num">${fmt(v, row.d)}${i === 0 ? '' : deltaCell(refV, v, row.dir)}</td>`).join('') + '</tr>';
+      `<td class="num">${fmt(v, row.d)}${i === 0 ? '' : deltaCell(refV, v, row.dir)}${(b != null && v === b) ? '<span class="sub" title="Meilleure valeur de la ligne"> ★</span>' : ''}</td>`).join('') + '</tr>';
   }).join('');
   const metaRows = (label, get) => `<tr><td style="font-weight:500">${label}</td>` + runs.map(r =>
     `<td>${esc(get(r.d) ?? '—')}</td>`).join('') + '</tr>';

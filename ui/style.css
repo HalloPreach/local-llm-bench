@@ -400,6 +400,11 @@ table.cmp-table{width:100%; border-collapse:collapse; background:var(--c-surface
 .cmp-table td.num,.cmp-table th.num{text-align:right; font-family:var(--font-mono)}
 .cmp-table .delta{font-size:var(--text-xs); font-family:var(--font-mono)}
 .cmp-table .delta.up{color:var(--c-ok)} .cmp-table .delta.down{color:var(--c-err)}
+.cmp-table td.best{font-weight:700; color:var(--c-accent)}
+.cmp-table td.best .sub{color:var(--c-text-faint)}
+.cmp-table th .ref-mark{margin-left:var(--sp-2)}
+/* liste de sélection (vue comparaison) : métriques en bout de ligne */
+.select-item .sel-metrics{display:block; margin-left:auto; flex:none}
 .cmp-wrap{overflow-x:auto; border:1px solid var(--c-border); border-radius:var(--r-lg); background:var(--c-surface); box-shadow:var(--shadow-sm)}
 .cmp-wrap table{min-width:640px}
 

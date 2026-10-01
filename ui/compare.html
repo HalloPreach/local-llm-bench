@@ -31,10 +31,28 @@
       <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); flex-wrap:wrap">
         <div>
           <h3 style="font-size:var(--text-base); font-weight:600">Runs à comparer <span class="badge badge--accent" id="selCount">0 / 5</span></h3>
-          <p class="demo-note" style="margin-top:var(--sp-1)">Sélectionner 2 à 5 runs — un run par couleur de la palette, le 1er sélectionné est la référence des deltas.</p>
+          <p class="demo-note" style="margin-top:var(--sp-1)">Sélectionner 2 à 5 runs — le 1er sélectionné est la référence des deltas (marqué « réf »), un run par couleur de la palette.</p>
         </div>
         <button class="btn btn--primary" type="button" id="goBtn" disabled>Comparer (0)</button>
       </div>
+      <div class="filter-bar" style="margin-top:var(--sp-3)" id="cmpFilterBar">
+        <div class="cls-field" style="flex:1 1 180px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" id="cmpSearch" placeholder="Filtrer (modèle, runtime, quant, GPU, statut)…" aria-label="Filtrer les runs">
+        </div>
+        <div class="cls-field"><label for="cmpModel">Modèle</label><select id="cmpModel"><option value="">Tous</option></select></div>
+        <div class="cls-field"><label for="cmpSort">Tri</label><select id="cmpSort">
+          <option value="date:-1">Date ↓</option>
+          <option value="date:1">Date ↑</option>
+          <option value="generation_tok_s:-1">Gen t/s ↓</option>
+          <option value="prompt_processing_tok_s:-1">Prompt t/s ↓</option>
+          <option value="ttft_s:1">TTFT ↑</option>
+          <option value="vram_peak_gb:-1">VRAM ↓</option>
+          <option value="tts:1">TTS ↑</option>
+        </select></div>
+        <button class="btn btn--ghost btn--sm" type="button" id="cmpReset">Réinitialiser</button>
+      </div>
+      <div style="margin-top:var(--sp-2)"><span id="selNote"></span></div>
       <div class="select-list" id="runList" style="margin-top:var(--sp-3); grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
         <div class="skeleton" style="height:40px;grid-column:1/-1"></div>
       </div>
