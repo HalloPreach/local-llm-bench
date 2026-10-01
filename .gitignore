@@ -7,3 +7,4 @@ bench.db
 *.db-wal
 *.db-shm
 bench.db.old
+bench.db.bak-*
