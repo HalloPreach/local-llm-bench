@@ -7,6 +7,7 @@ import base64
 import hashlib
 import json
 import math
+import os
 import shutil
 import sqlite3
 import statistics
@@ -74,7 +75,8 @@ def gh_api(*args, payload=None):
     executable = shutil.which("gh") or str(Path("C:/Program Files/GitHub CLI/gh.exe"))
     result = subprocess.run([executable, "api", *args],
                             input=json.dumps(payload) if payload is not None else None,
-                            text=True, capture_output=True)
+                            text=True, capture_output=True,
+                            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
     if result.returncode:
         raise RuntimeError(result.stderr.strip())
     return json.loads(result.stdout)

@@ -1,7 +1,11 @@
 param([string]$LogPath)
 $ErrorActionPreference = 'Stop'
 $syncRoot = $PSScriptRoot
-$pythonPath = (Get-Command python -ErrorAction Stop).Source
+$pythonConsolePath = (Get-Command python -ErrorAction Stop).Source
+$pythonPath = Join-Path (Split-Path -Parent $pythonConsolePath) 'pythonw.exe'
+if (-not (Test-Path -LiteralPath $pythonPath)) {
+    throw 'pythonw.exe introuvable: Python sans console est requis pour la synchronisation silencieuse.'
+}
 if (-not $LogPath) {
     $workspaceLog = Join-Path $syncRoot 'logs\ninfer.stderr.log'
     if (Test-Path -LiteralPath $workspaceLog) {
