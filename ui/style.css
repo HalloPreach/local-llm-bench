@@ -430,4 +430,8 @@ table.cmp-table{width:100%; border-collapse:collapse; background:var(--c-surface
 .delta.up{color:var(--c-ok)} .delta.down{color:var(--c-err)}
 .btn-row{display:flex; gap:var(--sp-2); flex-wrap:wrap}
 @media (max-width:639px){ .btn-row{flex-direction:column} .btn-row .btn{width:100%} }
+/* Pied de page discret : lien retour vers le portfolio de l'auteur */
+.app-footer{border-top:1px solid var(--c-border); padding-block:var(--sp-3); font-size:var(--text-sm); color:var(--c-text-muted)}
+.app-footer a{display:inline-block; padding-block:var(--sp-1); color:var(--c-text-muted)}
+.app-footer a:hover{color:var(--c-accent)}
 
